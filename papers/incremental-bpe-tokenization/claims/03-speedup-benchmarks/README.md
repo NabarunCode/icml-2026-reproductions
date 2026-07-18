@@ -32,12 +32,15 @@ O(n log²t) with no dependency on chunk boundaries.
 
 ## Implementation
 
-*(Phase 3–4 — to be written.)* Requires either (a) a working Python/Rust
-reimplementation of the incremental algorithm to swap in as the BPE stage,
-or (b) using the reference implementation directly for this specific claim
-while being explicit that doing so measures the *paper's* implementation,
-not ours — see the open question in `docs/ROADMAP.md` about reproduction
-language.
+*(Phase 3–4 — to be written.)* Python-first per `docs/ROADMAP.md`. Since
+this claim is about *relative* speedup and *shape* of behavior rather than
+matching the paper's absolute MiB/s numbers, a Python reimplementation
+should still be able to demonstrate the qualitative effect (bigger win on
+CodeLlama-style no-pre-tokenization configs than on regex-heavy ones) even
+if Python's constant-factor overhead changes the absolute magnitude. If
+Python overhead turns out to swamp the effect entirely, fall back to Rust
+for this claim specifically, per the documented decision — note that
+explicitly here if it happens, rather than silently switching.
 
 ## Experiment
 

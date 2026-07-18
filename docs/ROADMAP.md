@@ -18,8 +18,8 @@ Official implementation: [ModelTC/mtc-inc-bpe](https://github.com/ModelTC/mtc-in
 | 1. Read paper | ☐ | PDF in hand (with alphaXiv annotations); notes not yet written. |
 | 2. Understand theory | ☐ | Successor Forest / Suffix-Successor Tree / Monotonic Path Property need first-principles write-up. |
 | 3. Understand implementation | ☐ | Reference repo structure scouted (module list only); no line-level mapping yet. |
-| 4. Implement | ☐ | Not started. Target language TBD — see open question below. |
-| 5. Benchmark | ☐ | Not started. HF Jobs GPU credit available via `ICML-2026-agent-repro` org if local compute is insufficient (CPU-bound workload, so may not be needed). |
+| 4. Implement | ☐ | Not started. Language: **Python-first** (decision below). |
+| 5. Benchmark | ☐ | Not started. HF Jobs GPU/compute credit confirmed available via `ICML-2026-agent-repro` org if local compute is insufficient. |
 | 6. Verify claims | ☐ | See the 4 claims below, sourced from the official challenge listing. |
 | 7. Trackio | ☐ | See `trackio/README.md`. Org already joined, GPU credit already granted. |
 | 8. GitHub documentation | ☐ | Not started. |
@@ -47,18 +47,29 @@ paper, cross-checked against the paper text:
 Each will get its own folder under
 `papers/incremental-bpe-tokenization/claims/`.
 
-### Open questions to resolve before Phase 4
+### Decisions (resolved 2026-07-18)
 
-- **Reproduction language.** The reference implementation is Rust. A
-  faithful reproduction of the *algorithm* doesn't require Rust, but a
-  faithful reproduction of the *performance claims* (Claims 3–4) arguably
-  does, since Python overhead could dominate at these throughputs. Decide
-  whether to (a) port the core algorithm to Python for correctness/theory
-  verification and separately reason about performance qualitatively, or
-  (b) reproduce in Rust for a true apples-to-apples benchmark. Needs a
-  decision before Phase 4 — flagged for discussion, not decided here.
+- **Reproduction language: Python-first.** The reference implementation is
+  Rust, but the project owner reads/maintains Python, not Rust, so the
+  reproduction (Phase 4) is implemented in Python by default. Fall back to
+  Rust (or a small Rust extension for just the hot path) only if Python
+  turns out to be a genuine blocker for demonstrating a claim — e.g., if
+  Python overhead is so large that Claims 3–4 (throughput speedup,
+  pathological-input robustness) can't show the paper's *qualitative*
+  effect (relative speedup, O(n²) vs. near-linear shape) even though the
+  absolute numbers won't match a bare-metal Rust build. Correctness claims
+  (Claim 1, and most of Claim 2) are language-independent and have no
+  reason to need Rust. Document the decision inline in each claim's
+  `Implementation` section rather than assuming it's obvious from here.
 - **Compute scope.** The paper's benchmarks use a 32-core bare-metal Xeon
-  node. Our reproduction should report its own honest environment
+  node; ours will not match that hardware. HF Jobs GPU/compute credit
+  (via the already-joined `ICML-2026-agent-repro` org) is available if
+  Phase 5 needs more consistent or larger-scale compute than this sandbox
+  provides — note this workload is primarily CPU-bound (tokenization
+  throughput), so a GPU specifically may not be the relevant lever, but
+  HF Jobs also provisions CPU-only runs, which would help with the
+  bare-metal-like isolation (pinned cores, no noisy neighbors) the paper's
+  own methodology relies on. Either way, report our own honest environment
   (per the benchmarking standard) rather than claiming equivalence to the
   paper's hardware.
 

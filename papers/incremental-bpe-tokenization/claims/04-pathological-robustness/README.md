@@ -36,13 +36,17 @@ method and visibly super-linear (quadratic-looking) decay for `tiktoken`.
 
 ## Implementation
 
-*(Phase 3–4 — to be written.)* Shares implementation dependencies with
-Claim 3 (needs a working incremental BPE to compare against). This claim
-can also be *partially* verified independent of our own implementation:
-we can independently confirm the `tiktoken` O(n²) half of the claim today,
-using stock `tiktoken`, without needing our reproduction ready yet — worth
-doing early as a sanity check that the baseline behavior is real before
-we build anything to compare against it.
+*(Phase 3–4 — to be written.)* Python-first per `docs/ROADMAP.md`; shares
+implementation dependencies with Claim 3 (needs a working incremental BPE
+to compare against). This claim is arguably the safest one for a Python
+reproduction to hold up cleanly: it's about *shape* (linear-looking vs.
+quadratic-looking growth), which should survive constant-factor overhead
+much better than an absolute "3.13×"-style number would. It can also be
+*partially* verified independent of our own implementation: we can
+independently confirm the `tiktoken` O(n²) half of the claim today, using
+stock `tiktoken`, without needing our reproduction ready yet — worth doing
+early as a sanity check that the baseline behavior is real before we build
+anything to compare against it.
 
 ## Experiment
 
