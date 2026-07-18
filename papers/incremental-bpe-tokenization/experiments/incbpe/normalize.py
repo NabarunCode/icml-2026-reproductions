@@ -60,7 +60,10 @@ class NormalizedDict:
 
 
 def normalize(
-    dictionary: Dictionary, is_atomic: Callable[[TokenId, bytes], bool]
+    dictionary: Dictionary,
+    is_atomic: Callable[[TokenId, bytes], bool],
+    tokenize_fn: Callable[[Dictionary, list[TokenId]], tuple[list[TokenId], RuleId | None]]
+    | None = None,
 ) -> NormalizedDict:
     """Build a :class:`NormalizedDict` from a raw dictionary.
 
@@ -70,7 +73,14 @@ def normalize(
     UTF-8-codepoint-level mode (``new_in_utf8``) is not yet ported; byte-
     level is what real byte-level BPE tokenizers (GPT-style, CodeLlama,
     tiktoken encodings) actually use, so this covers Claim 3's needs.
+
+    ``tokenize_fn`` defaults to the from-scratch oracle (the definition);
+    real-vocabulary scale uses :func:`incbpe.fast_bpe.normalize_pq`,
+    which passes the fast dynamic-priority loop here instead (see that
+    module's docstring for the semantics caveat and how it is validated).
     """
+    if tokenize_fn is None:
+        tokenize_fn = tokenize_with_last_rule
     num_tokens = len(dictionary.vocab)
     priority: list[RuleId] = [NOT_CANONICAL] * num_tokens
     atomic: list[bool] = [False] * num_tokens
@@ -107,7 +117,7 @@ def normalize(
             atomic_ids = [byte_to_token[b] for b in token]
         except KeyError:
             continue  # some byte in this token has no atomic vocab entry at all
-        result, last_rule = tokenize_with_last_rule(dictionary, atomic_ids)
+        result, last_rule = tokenize_fn(dictionary, atomic_ids)
         if result != [token_id] or last_rule is None:
             continue  # not canonical: tokenizing its own bytes doesn't collapse to itself
         assert last_rule in candidates, (

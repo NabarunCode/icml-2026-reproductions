@@ -53,7 +53,9 @@ class Dictionary:
                     "produces a token not present in the vocabulary"
                 )
             rules.append(Rule(pre=pre, suc=suc, merged=merged))
-            pair_to_rule[(pre, suc)] = rule_id
+            # First occurrence wins: for a duplicated (pre, suc) pair the
+            # highest-priority (lowest-id) rule is the one lookups must see.
+            pair_to_rule.setdefault((pre, suc), rule_id)
         return Dictionary(vocab, tuple(rules), pair_to_rule)
 
     def find_rule(self, pre: TokenId, suc: TokenId) -> RuleId | None:

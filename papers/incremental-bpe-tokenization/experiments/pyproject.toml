@@ -8,6 +8,13 @@ license = { text = "MIT" }
 authors = [{ name = "NabarunCode" }]
 dependencies = []
 
+[project.optional-dependencies]
+# Benchmark-only baselines (Claims 3-4): never required by incbpe itself.
+bench = [
+    "tiktoken>=0.8",
+    "tokenizers>=0.20",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

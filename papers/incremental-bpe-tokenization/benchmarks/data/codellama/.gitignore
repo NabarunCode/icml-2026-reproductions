@@ -1,0 +1,4 @@
+# CodeLlama's tokenizer.json is used locally but NOT committed: it is
+# distributed under Meta's Llama license, which this repository does not
+# redistribute under. See ../README.md for hash + acquisition steps.
+tokenizer.json
