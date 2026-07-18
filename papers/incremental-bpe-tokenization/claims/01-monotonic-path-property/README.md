@@ -1,6 +1,8 @@
 # Claim 1 — The Monotonic Path Property (Theorem 4.2)
 
-**Status:** ☐ not started (Phase 0 scaffold only)
+**Status:** ◐ in progress — theory understood (Phase 2) and implemented
++ empirically tested (Phase 4); formal Appendix E re-derivation and final
+written-up verdict still open (Phase 6).
 
 ## Claim statement
 
@@ -52,16 +54,30 @@ work (below) surfaces a case the intuition doesn't cleanly cover.
 
 ## Implementation
 
-*(Phase 3–4 — to be written.)* This is a structural/correctness claim, not
-a performance claim, so verification is by **exhaustive/randomized testing
-against a brute-force reference BPE**, not by benchmarking: for many
-random dictionaries and strings, confirm that at every prefix length, the
-set of suffix tokens satisfying a directly-coded Prefix Last-Token
-Condition check is exactly a single root-to-θ(s) path.
+Implemented in
+[`../../../../experiments/incremental-bpe-tokenization/incbpe/incremental.py`](../../../../experiments/incremental-bpe-tokenization/incbpe/incremental.py),
+which codes Definition 4.1 (Prefix Last-Token Condition) directly via a
+Successor Forest ancestor-walk, rather than the paper's O(1) DFS-interval
+shortcut (that speedup is deferred — see the experiment's `README.md`
+"Limitations"). Verification is exactly the "exhaustive/randomized
+testing against a brute-force reference BPE" approach this section
+originally called for: every test in `tests/test_incremental.py` runs
+with `verify_monotonic=True`, which — on every single byte fed, not just
+the final answer — empirically checks the Upward Closure sub-lemma
+(Appendix E, Claim 1) that underlies Theorem 4.2: every forest-ancestor of
+the computed θ(s) must itself have satisfied Definition 4.1. This ran
+successfully across 200 randomized small dictionaries/strings, the
+paper's own repeated-character pathological family, and the real
+Figure-2-variant example recovered in Phase 3, with zero violations.
 
 ## Experiment
 
-*(Phase 4–5 — to be written.)*
+Done for the structural/correctness half (see Implementation above and
+`experiments/incremental-bpe-tokenization/README.md`). Not yet done:
+independently re-deriving Appendix E's full four-claim proof line-by-line
+to check for gaps the empirical testing wouldn't surface (empirical
+testing can show the property holds on tested cases, not prove it holds
+universally) — this remains open for Phase 6's final verdict.
 
 ## Benchmark
 

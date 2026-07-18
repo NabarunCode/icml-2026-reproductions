@@ -1,6 +1,10 @@
 # Claim 2 — Algorithm Design (Aho–Corasick + Centroid Decomposition + Eager Output)
 
-**Status:** ☐ not started (Phase 0 scaffold only)
+**Status:** ◐ in progress — the search algorithm's *correctness* is
+implemented and tested (Phase 4); the three specific mechanisms named in
+the claim (Aho–Corasick, Centroid Decomposition, eager output) are **not
+yet built** — see Implementation below. This claim cannot be marked
+verified until they are.
 
 ## Claim statement
 
@@ -50,20 +54,33 @@ example the way Claim 1's tree search has.
 
 ## Implementation
 
-*(Phase 3–4 — to be written.)* This is where Phase 3 (reference
-implementation mapping, see
-`../../resources/official-implementation.md`) does the most work: the
-`aho_corasick/`, `centroid.rs`, and `eager.rs` modules should map directly
-onto the three mechanisms above. Our reproduction should implement each
-piece separately and unit-test it in isolation before integrating, rather
-than reimplementing the whole pipeline monolithically.
+**Built so far** (`experiments/incremental-bpe-tokenization/incbpe/incremental.py`):
+a correct incremental search that finds θ(sc) by checking every canonical
+suffix-token candidate of the buffer directly against Definition 4.1
+(via a Successor-Forest ancestor walk), taking the longest one that
+passes. This reproduces the *result* of the paper's search (same θ,
+verified — see Claim 1) but not yet its *mechanism*: no Aho–Corasick
+automaton (candidates are found by scanning lengths against the
+vocabulary, O(t) instead of O(1)) and no Centroid Decomposition (each
+candidate check is an O(depth) ancestor walk instead of an O(1)
+DFS-interval test descending an O(log t)-height search tree). This was a
+deliberate scoping decision (see `experiments/.../README.md`
+"Limitations") to de-risk getting Definition 4.1 itself right before
+adding the performance machinery on top — worth revisiting once the
+correctness base is solid and Claim 3/4 benchmarking makes the speedup
+necessary. **Not yet started:** eager output (Section 6) has no
+implementation at all yet.
 
 ## Experiment
 
-*(Phase 4–5 — to be written.)* Differential testing against a brute-force
-"re-tokenize from scratch after every appended byte" reference is the
-right correctness harness here — the same tokenization result, faster,
-per every prefix of many random and adversarial strings.
+Done for the search-correctness half: `tests/test_incremental.py`
+differentially tests the incremental search against the from-scratch
+oracle across 200 random dictionaries/strings, the paper's repeated-
+character family, and the real reference-implementation traces from
+Phase 3 — "same tokenization result, every prefix of many random and
+adversarial strings," exactly as originally planned here, just not yet
+"faster" (see Implementation). Eager output and the Aho-Corasick/Centroid
+pieces have no experiments yet since they don't exist yet.
 
 ## Benchmark
 
