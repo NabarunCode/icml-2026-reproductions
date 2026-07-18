@@ -12,10 +12,13 @@ regex word, so tiktoken's merge loop bears the full cost):
 1. ``ours_gpt2`` — our incremental implementation on the real 50k-token
    vocabulary. Prediction: flat per-byte cost (Python-slow in absolute
    terms, but size-independent).
-2. ``tiktoken_gpt2`` — tiktoken's encode. Its merge phase is O(n^2) in
-   the word length (paper Figure 7); the quadratic coefficient is small,
-   so the grid extends to 2 MB where the n^2 term clearly dominates.
-   Prediction: per-byte cost grows ~linearly with n (total ~quadratic).
+2. ``tiktoken_gpt2`` — tiktoken's encode. The paper (Figure 7)
+   attributes O(n^2) merge cost to tiktoken; a first run of this
+   benchmark up to 2 MB measured only mildly superlinear growth (local
+   log-log slope ~1.15-1.27) on tiktoken 0.13.0, so the grid now
+   extends to 8 MB to be decisive about whether the quadratic regime
+   appears at the sizes the paper plots. Whatever shape emerges is
+   reported.
 
 Correctness first: on every size both tokenizers must produce the
 identical token-id sequence (ours mapped to GPT-2 ids) — an external
@@ -61,7 +64,18 @@ GPT2_PAT = r"""'s|'t|'re|'ve|'m|'ll|'d| ?[\p{L}]+| ?[\p{N}]+| ?[^\s\p{L}\p{N}]+|
 # Our Python implementation is ~30 us/byte, so its grid stays modest;
 # tiktoken (Rust) needs MB-scale inputs before its n^2 term dominates.
 OURS_SIZES = [5_000, 10_000, 20_000, 50_000, 100_000]
-TIKTOKEN_SIZES = [10_000, 20_000, 50_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000]
+TIKTOKEN_SIZES = [
+    10_000,
+    20_000,
+    50_000,
+    100_000,
+    200_000,
+    500_000,
+    1_000_000,
+    2_000_000,
+    4_000_000,
+    8_000_000,
+]
 
 
 def load_tiktoken() -> tiktoken.Encoding:
