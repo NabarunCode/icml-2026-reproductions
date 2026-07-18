@@ -16,42 +16,55 @@ fixed, citable version of the reference code, without vendoring (and
 silently drifting from) its source. Update the pin deliberately, with a
 note in this file, if a newer release becomes relevant.
 
-## Module map (for Phase 3)
+## Module map — verified (Phase 3 complete)
 
-Observed structure at `v0.9.1` (not yet annotated with paper section
-correspondences — that's Phase 3 work):
+Full verified mapping, with how each row was checked, is in
+[`../paper/implementation-notes.md`](../paper/implementation-notes.md).
+Condensed version:
 
 ```
 src/
-  lib.rs                    # crate entry point
-  dict.rs                   # merge-rule dictionary, likely §3.1/§3.3 (normalization)
-  normalize.rs               # dictionary normalization — likely §3.3 / Appendix A (properizing)
-  vocab.rs                   # vocabulary representation
-  successor.rs                # Successor Forest — §3.4
-  suf_suc.rs                  # Suffix-Successor Tree — §3.5
-  centroid.rs                 # Centroid Decomposition / Centroid Search Tree — §5.3
-  eager.rs                    # Eager Output mechanism — §6
-  inc_bpe.rs                  # top-level incremental algorithm, ties the above together — §5.1
-  typed_vec.rs                 # utility
-  aho_corasick/               # Aho–Corasick automaton — §5.2
-    automaton.rs
-    heavy_light.rs             # possibly related to the Suffix-Successor Tree's heavy path structure
-    index.rs
-    relabeling.rs               # likely the DFS linearization of §4.3
-    suf_link_tree.rs
-    trans.rs                    # likely the square-root tiled transition table — Appendix F
-    trie.rs
+  lib.rs                    # crate entry point / public API surface
+  dict.rs                   # §3.1 dictionary D (ordered Rule list)
+  normalize.rs               # §3.3 normalization + Appendix A (properizing);
+                              # NormalizedDictBuildError::ImproperDict = the
+                              # Appendix A.6 non-properizable-dictionary detector
+  vocab.rs                   # §3.1 vocabulary V
+  successor.rs                # §3.4 Successor Forest (verified against real
+                              # Figure-2-variant data, see implementation-notes.md)
+  suf_suc.rs                  # §3.5 Suffix-Successor Tree + §4.3 DFS
+                              # linearization / valid-interval computation
+  centroid.rs                 # §5.3 Centroid Decomposition / Centroid Search Tree
+  eager.rs                    # §6 Eager Output (Active Frontier, two-pointer alg.)
+  inc_bpe.rs                  # §5.1 top-level incremental algorithm
+  typed_vec.rs                 # generic infra, no paper correspondence
+  aho_corasick/               # §5.2 Aho-Corasick automaton
+    automaton.rs               # classic AC construction (BFS + failure links)
+    heavy_light.rs             # NOT named in the paper text — heavy-light
+                              # decomposition used only to relabel trie nodes
+                              # for cache locality before the transition table
+    index.rs                   # ACNodeId newtype
+    relabeling.rs               # generic node-relabeling utility
+    suf_link_tree.rs            # suffix links as a navigable parent->children tree
+    trans.rs                    # Appendix F square-root tiled transition table
+                              # (byte -> 4-bit/4-bit tile split, 16x16=256)
+    trie.rs                     # plain trie storage
   sp_impl/
-    bpe.rs                      # reference/baseline BPE implementation for correctness checks
-    heap.rs                      # heap-based baseline (standard priority-queue BPE), for correctness cross-checks
+    bpe.rs, heap.rs             # NOT the incremental contribution — a from-scratch
+                              # heap-based BPE oracle used internally by the
+                              # crate's own tests for correctness cross-checks
 tools/
-  properize.py                 # Python tool implementing dictionary properization (Appendix A) — worth reading before we reimplement properization ourselves
+  properize.py                 # Python properization tool (Appendix A) — not yet read
 ```
 
-This mapping is a first-pass guess from filenames only; it has **not**
-been verified by reading the code line-by-line. Phase 3 will replace this
-table with a verified mapping (file/function → paper section/theorem),
-and correct anything wrong here.
+**Bonus finding:** the reference implementation's test suite
+(`successor.rs`, `suf_suc.rs`, `centroid.rs`, `inc_bpe.rs`, `eager.rs`)
+preserves (a 13-of-14-rule variant of) the paper's own Figure 2 worked
+example as a regression test fixture. Running it
+(`cargo test --lib <module>::tests::<test> -- --nocapture`) gave us
+authoritative ground truth for the Successor Forest structure and several
+concrete θ-traces — see `implementation-notes.md` for the full
+reconstruction and cross-check against our own Phase 2 theory.
 
 ## What we will NOT do
 

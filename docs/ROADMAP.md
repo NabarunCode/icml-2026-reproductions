@@ -17,8 +17,8 @@ Official implementation: [ModelTC/mtc-inc-bpe](https://github.com/ModelTC/mtc-in
 | 0. Repository setup | ☑ | Directory structure, docs, official resources, roadmap, Trackio prep done 2026-07-18. |
 | 1. Read paper | ☑ | Full reading notes written 2026-07-18 — see `papers/incremental-bpe-tokenization/paper/reading-notes.md`. |
 | 2. Understand theory | ☑ | First-principles write-up done 2026-07-18 — see `papers/incremental-bpe-tokenization/paper/theory-notes.md`. Built and mechanically verified our own minimal example (not the paper's Figure 2, which didn't extract as trustworthy structured data). |
-| 3. Understand implementation | ☐ | Next up. Reference repo structure scouted (module list only, `resources/official-implementation.md`); no line-level mapping yet. |
-| 4. Implement | ☐ | Not started. Language: **Python-first** (decision below). |
+| 3. Understand implementation | ☑ | Verified module map done 2026-07-18 — see `papers/incremental-bpe-tokenization/paper/implementation-notes.md`. Bonus: found the reference implementation's own test suite preserves a 13/14-rule variant of the paper's Figure 2 example; ran it with `cargo test` for authoritative ground-truth θ-traces and forest structure. |
+| 4. Implement | ☐ | Next up. Language: **Python-first** (decision below). First test fixture ready: the recovered Figure-2-variant example + its verified θ-traces, from Phase 3. |
 | 5. Benchmark | ☐ | Not started. HF Jobs GPU/compute credit confirmed available via `ICML-2026-agent-repro` org if local compute is insufficient. |
 | 6. Verify claims | ☐ | See the 4 claims below, sourced from the official challenge listing. |
 | 7. Trackio | ☐ | See `trackio/README.md`. Org already joined, GPU credit already granted. |
