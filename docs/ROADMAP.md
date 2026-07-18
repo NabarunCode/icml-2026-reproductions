@@ -15,8 +15,8 @@ Official implementation: [ModelTC/mtc-inc-bpe](https://github.com/ModelTC/mtc-in
 | Phase | Status | Notes |
 |---|---|---|
 | 0. Repository setup | ☑ | Directory structure, docs, official resources, roadmap, Trackio prep done 2026-07-18. |
-| 1. Read paper | ☐ | PDF in hand (with alphaXiv annotations); notes not yet written. |
-| 2. Understand theory | ☐ | Successor Forest / Suffix-Successor Tree / Monotonic Path Property need first-principles write-up. |
+| 1. Read paper | ☑ | Full reading notes written 2026-07-18 — see `papers/incremental-bpe-tokenization/paper/reading-notes.md`. |
+| 2. Understand theory | ☐ | Next up. Successor Forest / Suffix-Successor Tree / Monotonic Path Property need first-principles write-up, building on the Phase 1 notes. |
 | 3. Understand implementation | ☐ | Reference repo structure scouted (module list only); no line-level mapping yet. |
 | 4. Implement | ☐ | Not started. Language: **Python-first** (decision below). |
 | 5. Benchmark | ☐ | Not started. HF Jobs GPU/compute credit confirmed available via `ICML-2026-agent-repro` org if local compute is insufficient. |
