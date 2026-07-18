@@ -138,6 +138,19 @@ depth vs. tree size, eager-output overhead vs. non-eager) — separate from
 the end-to-end throughput numbers in Claim 3, per the paper's own
 Table 5 breakdown (they report eager output separately, ~10% overhead).
 
+**First measurement (Phase 5, 2026-07-18) — the missing-centroid cost,
+quantified:**
+[`../../results/claim2-depth-scaling.md`](../../results/claim2-depth-scaling.md)
+— on a depth-d successor chain (d = 16…512), amortized per-byte cost
+stays flat (~1.5 µs/byte) while the worst single `feed(byte)` latency
+grows **linearly in d** (log-log slope 0.972, ~0.8 µs per level,
+predictions recorded in the script before running). This confirms the
+documented limitation is real and locates it precisely: without
+Centroid Decomposition the gap is *tail latency*, not throughput, on
+chain-completion-sparse inputs. Re-running this benchmark after
+implementing §5.3 should flatten `feed_max_latency` to polylog — that
+is the acceptance test for the follow-up.
+
 ## Result
 
 *(Phase 6 — to be written. No fabricated numbers.)*

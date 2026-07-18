@@ -59,10 +59,28 @@ document it rather than route around it.
 
 ## Benchmark
 
-Same benchmarking standard as Claim 3. This experiment is cheap enough
-(single-character-repeat strings, no dataset download) that it should be
-one of the first things run once *any* reproduction code exists, even
-before Claim 3's full multi-tokenizer sweep.
+**Run (Phase 5, 2026-07-18):**
+[`../../results/claim4-pathological.md`](../../results/claim4-pathological.md)
+— script [`../../benchmarks/claim4_pathological.py`](../../benchmarks/claim4_pathological.py),
+raw data + environment under `../../benchmarks/runs/claim4-pathological/`,
+per `docs/BENCHMARK_PROTOCOL.md` (clean tree, warm-up 3, repeats 10,
+raw samples committed).
+
+Headline measurements (details and caveats in the results doc):
+
+- our incremental implementation: **flat ~1.9 µs/byte from n=1 000 to
+  n=100 000** — log-log slope of total time vs n = **0.995** (linear);
+- restart-per-byte from-scratch baseline: slope **1.901** (quadratic),
+  per-byte cost doubling as n doubles;
+- correctness cross-checked against the oracle at every size before
+  timing.
+
+**Honest gap:** the paper's actual baseline, `tiktoken`, could not run
+in this sandbox (its encoding files download from a CDN blocked by the
+egress policy). The quadratic baseline measured here isolates the same
+mechanism (from-scratch re-merging per appended byte), but a direct
+tiktoken measurement in an unrestricted environment is still needed
+before this claim can be called fully reproduced.
 
 ## Result
 

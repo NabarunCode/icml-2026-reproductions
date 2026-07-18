@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "captured_at_utc": "2026-07-18T17:24:54.142144+00:00",
+  "git": {
+    "commit": "e973b163643b0a19a1ff3c4107c125a33126d3de",
+    "branch": "claude/icml-2026-reproductions-handover-zvye6y",
+    "dirty": false
+  },
+  "python": {
+    "version": "3.11.15",
+    "implementation": "CPython",
+    "executable": "/home/user/icml-2026-reproductions/.venv/bin/python3"
+  },
+  "os": {
+    "system": "Linux",
+    "release": "6.18.5",
+    "version": "#1 SMP PREEMPT_DYNAMIC @0",
+    "machine": "x86_64"
+  },
+  "cpu": {
+    "model": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+    "logical_cores": 4
+  },
+  "memory": {
+    "total_bytes": 16856244224
+  },
+  "gpu": {
+    "devices": null,
+    "cuda_version": null
+  },
+  "rust": {
+    "rustc_version": "rustc 1.94.1 (e408947bf 2026-03-25)"
+  },
+  "packages": {
+    "ast_serialize": "0.6.0",
+    "cfgv": "3.5.0",
+    "distlib": "0.4.3",
+    "filelock": "3.31.0",
+    "identify": "2.6.19",
+    "incbpe": "0.1.0",
+    "iniconfig": "2.3.0",
+    "librt": "0.13.0",
+    "mypy": "2.3.0",
+    "mypy_extensions": "1.1.0",
+    "nodeenv": "1.10.0",
+    "packaging": "26.2",
+    "pathspec": "1.1.1",
+    "platformdirs": "4.10.1",
+    "pluggy": "1.6.0",
+    "pre_commit": "4.6.0",
+    "Pygments": "2.20.0",
+    "pytest": "9.1.1",
+    "python-discovery": "1.4.4",
+    "PyYAML": "6.0.3",
+    "repro-core": "0.1.0",
+    "ruff": "0.15.22",
+    "typing_extensions": "4.16.0",
+    "virtualenv": "21.6.1"
+  }
+}
