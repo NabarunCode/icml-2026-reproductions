@@ -51,9 +51,12 @@ def _run(args: list[str]) -> str | None:
 def _git_info() -> dict[str, Any]:
     commit = _run(["git", "rev-parse", "HEAD"])
     branch = _run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
-    porcelain = _run(["git", "status", "--porcelain"])
-    # `git status --porcelain` prints nothing on a clean tree, which _run
-    # normalizes to None — distinguish that from git being absent entirely.
+    # Untracked files are excluded (matching `git describe --dirty`
+    # semantics): a benchmark's own freshly written output files must not
+    # mark the run dirty. Modified/staged *tracked* files do.
+    porcelain = _run(["git", "status", "--porcelain", "--untracked-files=no"])
+    # `git status` prints nothing on a clean tree, which _run normalizes
+    # to None — distinguish that from git being absent entirely.
     dirty = None if commit is None else porcelain is not None
     return {"commit": commit, "branch": branch, "dirty": dirty}
 
