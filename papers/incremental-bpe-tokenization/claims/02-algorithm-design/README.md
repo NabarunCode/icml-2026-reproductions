@@ -24,17 +24,29 @@ Concretely, three separate mechanisms are claimed to compose correctly:
 
 ## Explanation
 
-*(Phase 1–2 — to be written.)*
+Full write-up in
+[`../../paper/theory-notes.md`](../../paper/theory-notes.md) §§6–9.
+Summary: Aho–Corasick gives the longest currently-recognized vocabulary
+suffix in O(1) per character (a well-known technique, correctly applied —
+not this paper's novel contribution); Centroid Decomposition is what
+turns "walk down a possibly `t`-deep Suffix-Successor Tree" into
+"O(log t) branching decisions, each an O(log t) sibling binary search,"
+giving O(log²t); eager output tracks a shrinking-only window of
+"parental candidates" bounded by the automaton's current match depth, and
+emits a token permanently once it's outside every live candidate's reach.
 
 ## Mathematics
 
-*(Phase 2 — to be written.)* Complexity bookkeeping: O(1) automaton
-transition, O(log|τ|) CST traversal, O(log|τ|) binary search per decision
-step → O(log²|τ|) per byte (Section 5.4). Eager output's amortized O(1)
-argument (Appendix G) rests on each Prefix-Tree-of-Tokens node being
-inserted/removed from the tracked subgraph at most once each — needs its
-own careful check, since amortized arguments are exactly where subtle
-correctness bugs hide.
+See `../../paper/theory-notes.md` §7 for the plain-language derivation of
+why O(log t) × O(log t) = O(log²t) (CST height × sibling binary search),
+and §9 for why eager output's overhead is amortized O(1)/byte (each
+Prefix-Tree-of-Tokens node enters and leaves the tracked window at most
+once). Not yet independently re-derived against the paper's own Appendix G
+line-by-line — flagged as the same kind of "verify by testing, not just
+by reading" concern as Claim 1, since amortized arguments are exactly
+where subtle correctness bugs hide, and eager output is the one place in
+this paper that hasn't yet been reduced to a single hand-checked numeric
+example the way Claim 1's tree search has.
 
 ## Implementation
 

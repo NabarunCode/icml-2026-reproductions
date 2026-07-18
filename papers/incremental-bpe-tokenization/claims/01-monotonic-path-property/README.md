@@ -21,19 +21,34 @@ complexity bound would not hold.
 
 ## Explanation
 
-*(Phase 1–2 — to be written.)* Plain-language walkthrough of why boundary
-elimination during BPE merges forces this monotonic structure, building on
-the "boundary elimination" intuition in Appendix D before touching the
-formal proof in Appendix E.
+Full write-up in
+[`../../paper/theory-notes.md`](../../paper/theory-notes.md) (Phase 2).
+Summary: because a merge rule can only glue together tokens that are
+*already adjacent*, and can never reach back across a boundary that's
+already settled (boundary elimination), truncating a valid tokenization
+at any token boundary always gives you the valid tokenization of the
+shorter string (Lemma 3.1). That fact is what lets the algorithm track
+just one moving "last token" instead of a whole tokenization, and
+Theorem 4.2 is the guarantee that as that last token moves (byte by
+byte), the set of things it could possibly be forms one single connected
+path in the Suffix-Successor Tree — never two live branches at once. The
+theory notes include a small, mechanically-verified 3-rule example
+(`ab`/`bb`/`abb` over alphabet `{a,b}`) showing the last token jumping
+between sibling branches of the tree as the string grows
+(`θ(a)=a → θ(ab)=ab → θ(abb)=abb → θ(abbb)=bb`), including the concrete
+DFS-interval arithmetic that predicts the jump.
 
 ## Mathematics
 
-*(Phase 2 — to be written.)* The paper's proof (Appendix E) proceeds via
-four claims: upward closure, uniqueness of the satisfying child, that
-θ(s) itself satisfies the condition, and that θ(s) is maximal (no child
-also satisfies it). Our job here is to restate this proof in our own words
-with enough intermediate steps that we could regenerate it without the
-paper, and to look for gaps or unstated assumptions.
+See `../../paper/theory-notes.md` §§4–7 for the worked-example version.
+The paper's own proof (Appendix E) proceeds via four claims: upward
+closure, uniqueness of the satisfying child, that θ(s) itself satisfies
+the condition, and that θ(s) is maximal (no child also satisfies it). Not
+yet independently re-derived line-by-line against Appendix E — the theory
+notes build intuition and a numerically-checked example, but a full
+restatement of the four-claim proof (checking for gaps/unstated
+assumptions) is still open, to be done if/when Claim 1's implementation
+work (below) surfaces a case the intuition doesn't cleanly cover.
 
 ## Implementation
 
