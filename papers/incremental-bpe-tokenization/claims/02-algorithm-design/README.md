@@ -1,12 +1,14 @@
 # Claim 2 — Algorithm Design (Aho–Corasick + Centroid Decomposition + Eager Output)
 
-**Status:** ◐ in progress — all three named mechanisms now exist and are
-tested (Aho–Corasick, tree navigation, eager output), but tree navigation
-is not yet the specific Centroid-Decomposition/O(1)-interval mechanism
-the claim describes, and eager output is not yet its specific O(1)-
-amortized two-pointer mechanism — see Implementation below. This claim
-cannot be marked verified until the *mechanisms*, not just the
-*results*, match.
+**Status:** ◐ in progress — Aho–Corasick, the O(1) DFS-interval test
+(with its "Mutual Exclusion among Siblings" precondition independently
+verified), and eager output all exist and are tested. The single
+remaining gap is now narrow and precise: Centroid Decomposition, which
+bounds the *number of tree levels* visited to O(log t) — everything else
+(the O(1) per-level test, the O(log branching) binary search over
+siblings) already matches the paper's mechanism. Eager output is also
+not yet its specific O(1)-amortized two-pointer mechanism. This claim
+cannot be marked verified until Centroid Decomposition closes that gap.
 
 ## Claim statement
 
@@ -64,18 +66,27 @@ example the way Claim 1's tree search has.
   eagerly-precomputed square-root-tiled transition table (Appendix F) —
   that's a memory/engineering optimization on top of the same automaton,
   not a different mechanism, and not needed for correctness.
-- `incremental.py::_search_tree_walk` — replaces the original length-
-  scanning search with a genuine top-down walk of the Successor Forest:
-  starts at the atomic root for the new byte, descends into whichever
-  child (at most one, per Theorem 4.2's mutual-exclusion corollary)
-  still satisfies Definition 4.1, stops when none does. This is real
-  tree navigation, cross-checked against τ(sc) (must never exceed it)
-  and against the original length-scanning search on every single test
-  run — but the per-node check is still an O(depth) ancestor walk
-  (`_satisfies_condition`), not the paper's O(1) DFS-interval test, and
-  there is no Centroid Search Tree — so it's not yet O(log²t) on a
-  deliberately deep, narrow dictionary (Appendix J's adversarial
-  construction).
+- `dfs_interval.py` — the O(1) DFS-linearization valid-interval test
+  (§4.3) exactly as described: pre-order DFS over the Successor Forest,
+  children visited lowest-to-highest priority, each non-atomic
+  canonical token's valid range computed from its own `pre()`'s sibling
+  structure. Includes `find_valid_child`, a binary search over
+  pre-sorted sibling intervals — sound specifically because of the
+  paper's "Mutual Exclusion among Siblings" corollary, which is *not*
+  just assumed here (see `tests/test_sibling_disjointness.py`).
+- `incremental.py::_search_binary_walk` (now the primary search used by
+  `feed()`) — walks the Successor Forest top-down, but finds the one
+  valid child at each level via `find_valid_child` (O(1) test + O(log
+  branching) binary search) instead of checking every child directly.
+  This matches the paper's per-node mechanism; what it does *not* yet do
+  is bound the *number of levels* to O(log t) — that requires Centroid
+  Decomposition, which rebalances the raw (potentially O(t)-deep)
+  Successor Forest into an O(log t)-height search tree. Investigated but
+  not completed: the reference implementation's centroid-removal
+  mechanism recursively re-decomposes the "remainder" left after
+  extracting each centroid, and reconstructing that exactly (rather than
+  a plausible-but-unverified approximation) needs more dedicated time
+  than this pass had. A precisely-scoped follow-up, not a vague one.
 - `eager.py` — a working eager-output implementation, built directly
   from Section 6.1's definition (gather every live candidate's full
   backtrack chain, take their longest common prefix) rather than
@@ -83,29 +94,42 @@ example the way Claim 1's tree search has.
   Experiment), but recomputes from scratch each byte rather than being
   O(1) amortized.
 
-**Still not built:** the DFS-interval O(1) test and Centroid
-Decomposition (§4.3, §5.3) — the one substantive remaining gap, flagged
-consistently across this repository rather than silently dropped.
+**Still not built:** Centroid Decomposition (§5.3) — the one remaining
+gap, now narrowly scoped to "bound the number of tree levels," since
+everything else about the per-level mechanism is done and verified.
 
 ## Experiment
 
 - `tests/test_aho_corasick.py` — automaton output checked against a
   brute-force "longest matching vocab suffix" scan, on the recovered
   Figure-2-variant example and 100 randomized dictionaries.
+- `tests/test_dfs_interval.py` — the O(1) interval test checked against
+  the ancestor-walk oracle across *every possible* (candidate,
+  history-value) pair (not just ones a specific run happens to hit);
+  `find_valid_child` separately checked against a linear scan over the
+  same space.
+- `tests/test_sibling_disjointness.py` — directly verifies the paper's
+  "Mutual Exclusion among Siblings" corollary holds (a precondition for
+  the binary search to be sound), across 200 randomized dictionaries.
 - `tests/test_incremental.py` — as before (200 random dictionaries, the
   repeated-character family, real reference-implementation traces),
-  now *also* asserting on every byte that the tree-walk search agrees
-  with the original length-scanning search and that θ(sc) never exceeds
-  τ(sc) from the automaton.
+  now *also* asserting on every byte that the binary-search walk agrees
+  with both the plain tree walk and the original length-scanning search,
+  and that θ(sc) never exceeds τ(sc) from the automaton. This also
+  confirmed a subtle point empirically: `_search_binary_walk` skips the
+  "is this candidate actually a string-suffix of the buffer" pre-filter
+  the other two searches use, relying instead on Appendix E's Claim 4
+  (proved for *every* forest child, not just buffer-matching ones) — the
+  cross-check across hundreds of dictionaries is what gives confidence
+  this shortcut is actually sound, not just plausible.
 - `tests/test_eager.py` — concatenating every eagerly-emitted token
   (plus a final flush) exactly reproduces the non-eager tokenization,
   checked across the same three test families.
 
-All of the above pass. "Same tokenization result, faster" is now true
-for the search (real tree navigation replacing brute-force length
-scanning) and eager output now exists and is verified — what's not yet
-true is "as fast as the paper's specific claimed complexity," which
-needs Centroid Decomposition.
+All of the above pass (22/22 tests). "Same tokenization result, faster"
+is now true for the search at the per-level mechanism level — what's not
+yet true is "bounded to O(log t) levels in the worst case," which needs
+Centroid Decomposition specifically.
 
 ## Benchmark
 

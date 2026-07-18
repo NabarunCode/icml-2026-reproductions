@@ -16,37 +16,47 @@ and tested against that reference where useful.
 | Standard-BPE oracle (from scratch) | `incbpe/oracle.py` | §3.1, Eq. 1 | Done — this is the ground-truth definition everything else is tested against |
 | Normalization (canonical tokens) | `incbpe/normalize.py` | §3.3 | Done, byte-level atomicity only (see Limitations) |
 | Successor Forest (parent + children) | `incbpe/successor_forest.py` | §3.4 | Done |
-| Aho–Corasick automaton | `incbpe/aho_corasick.py` | §5.2 | Done — O(1)-amortized longest-suffix lookup; not yet wired as the search's own starting point (see Limitations) |
-| Incremental theta(s) search | `incbpe/incremental.py` | §4 (Def. 4.1, Thm. 4.2), §5.1, §5.3 (partial) | Done, **tree-walk, not yet centroid-decomposed** (see Limitations) |
+| Aho–Corasick automaton | `incbpe/aho_corasick.py` | §5.2 | Done — O(1)-amortized longest-suffix lookup; used as a cross-check (see Limitations) |
+| DFS linearization + O(1) valid-interval test | `incbpe/dfs_interval.py` | §4.3 | Done — includes the "Mutual Exclusion among Siblings" property, independently verified (see Verification) |
+| Incremental theta(s) search | `incbpe/incremental.py` | §4 (Def. 4.1, Thm. 4.2), §5.1, §5.3 (partial) | Done, **O(depth) levels, O(1) per level; not yet centroid-balanced** (see Limitations) |
 | Eager output | `incbpe/eager.py` | §6 | Done, **definition-first, not yet the O(1)-amortized two-pointer mechanism** (see Limitations) |
-| Centroid Decomposition / DFS-interval O(1) test | — | §4.3, §5.3 | **Not implemented yet** |
+| Centroid Decomposition | — | §5.3 | **Not implemented yet** — the one remaining named mechanism from Claim 2 |
 | Appendix A properization | — | Appendix A | **Not implemented yet** |
 
 ## Limitations (explicit, not silent)
 
-This is still a **correctness-first** implementation. Every mechanism
-Claim 2 names now exists (Aho–Corasick, tree navigation, eager output),
-but none has yet received the paper's specific O(1)/O(log t) speedup —
-that's the one substantive gap left before Claims 3–4 (performance) can
-be benchmarked at realistic or adversarial scale:
+This is still a **correctness-first** implementation, though the gap to
+the paper's full complexity bound has narrowed to one specific,
+well-understood piece:
 
-1. **Aho–Corasick gives tau(sc) in O(1) amortized** (`aho_corasick.py`),
-   and is used as a cross-check (theta(sc) can never be longer than
-   tau(sc), asserted on every byte when `verify_monotonic=True`) — but
-   the search itself (`incremental.py::_search_tree_walk`) doesn't yet
-   use it as its own starting point; it starts from the atomic root and
-   walks down instead.
-2. **Finding theta(sc) is a top-down tree walk**
-   (`_search_tree_walk`), visiting real Successor Forest descendants of
-   the root and checking each candidate child directly against
-   Definition 4.1 (an O(depth) ancestor-walk check per node,
-   `_satisfies_condition`), rather than the paper's O(1) DFS-interval
-   test navigated via an O(log t)-height Centroid Search Tree (§4.3,
-   §5.3). This is faster than the original length-scanning approach
-   (only visits actual tree nodes, not every possible string length),
-   but is not yet O(log²t) in the worst case — a maximally deep,
-   narrow-branching dictionary (like Appendix J's adversarial
-   construction) would still cost close to O(depth) per byte here.
+1. **Finding theta(sc)** (`_search_binary_walk`, the primary search used
+   by `feed()`) is a top-down walk of the Successor Forest that, at each
+   *level*, finds the one valid child (if any) via the O(1) DFS-interval
+   test plus an O(log branching-factor) binary search over pre-sorted,
+   provably-disjoint sibling intervals (`dfs_interval.py`) — this part
+   now matches the paper's own per-node mechanism (§4.3, §5.3's
+   binary-search step). What's still missing is bounding the *number of
+   levels* visited: nothing yet rebalances the raw Successor Forest into
+   an O(log t)-height Centroid Search Tree, so a deliberately deep,
+   narrow-branching dictionary (Appendix J's adversarial construction,
+   depth ~t) would still cost close to O(t) here, not O(log²t). This was
+   investigated during development - the reference implementation's
+   specific centroid-removal mechanism (recursively re-decomposing the
+   "remainder" left after each centroid extraction) proved intricate
+   enough that implementing a plausible-but-unverified version seemed
+   worse than leaving it as a precisely-scoped follow-up. Two older,
+   slower search strategies (`_search_tree_walk`, `_search_by_length`)
+   are kept specifically so `_search_binary_walk` can be continuously
+   cross-checked against them - not dead code.
+2. **A subtle correctness question resolved during this work, worth
+   recording:** `_search_binary_walk` does *not* pre-filter candidate
+   children by whether they're literally a string-suffix of the current
+   buffer (unlike `_search_tree_walk`, which does). This is safe only
+   because Appendix E's Claim 4 (the answer node has no child satisfying
+   Definition 4.1) is proved for *every* forest child, not just
+   buffer-matching ones - confirmed empirically here, not just assumed,
+   by cross-checking both search strategies against each other on every
+   byte across hundreds of test dictionaries.
 3. **Eager output recomputes the common ancestral path directly from
    its definition** (`eager.py`) — gather every candidate's full
    backtrack chain and take their longest common prefix — rather than
@@ -66,9 +76,13 @@ be benchmarked at realistic or adversarial scale:
 None of this is a shortcut taken silently — each gap is exactly what's
 still needed to move from "the algorithm is structurally and
 mechanistically correct" (this implementation, now) to "the algorithm is
-also this fast" (needed for Claims 3–4, not yet attempted). Closing gap 2
-(Centroid Decomposition) is the next planned step in Phase 4, before
-Phase 5 (benchmarking) can honestly begin.
+also this fast in the worst case" (needed for Claims 3–4, not yet
+attempted). Closing gap 1 (Centroid Decomposition specifically) is the
+next planned step in Phase 4, before Phase 5 (benchmarking) can honestly
+begin at adversarial scale — though ordinary-case benchmarking (Claim 3,
+and possibly Claim 4's specific repeated-character test, which produces
+a *wide, shallow* tree per the Phase 2 finding, not a deep one) may
+already be meaningful with what exists now.
 
 ## Verification approach
 
@@ -84,6 +98,15 @@ Every claim of correctness here is backed by a test, not by inspection:
 - **`tests/test_aho_corasick.py`** — the automaton checked against a
   brute-force "longest matching vocab suffix" scanner, on the recovered
   Figure-2-variant example and 100 randomized dictionaries.
+- **`tests/test_dfs_interval.py`** — the O(1) interval test checked
+  against the ancestor-walk oracle across *every possible* (candidate,
+  history-value) pair, not just ones that arise in one run; the binary
+  search (`find_valid_child`) separately checked against a plain linear
+  scan using that same interval test, on the same exhaustive space.
+- **`tests/test_sibling_disjointness.py`** — the paper's own "Mutual
+  Exclusion among Siblings" corollary (Section 4.3), checked directly:
+  every forest node's children have pairwise-disjoint valid intervals,
+  across the Figure-2-variant example and 200 randomized dictionaries.
 - **`tests/test_incremental.py`**:
   - Exact reproduction of the real θ-traces captured by running the
     reference implementation's own tests (`cargo test ... -- --nocapture`,
@@ -97,10 +120,10 @@ Every claim of correctness here is backed by a test, not by inspection:
   - Every single one of the above also runs with `verify_monotonic=True`,
     which — on every byte fed, not just the final answer — (a) empirically
     checks Theorem 4.2 / Claim 1's Upward Closure, (b) cross-checks the
-    tree-walk search against the original length-scanning search (kept
-    specifically as a reference oracle for this), and (c) asserts
-    theta(sc) is never longer than tau(sc) from the Aho–Corasick
-    automaton.
+    binary-search walk against the plain tree walk *and* against the
+    original length-scanning search (both kept specifically as reference
+    oracles for this), and (c) asserts theta(sc) is never longer than
+    tau(sc) from the Aho–Corasick automaton.
 - **`tests/test_eager.py`** — concatenating every eagerly-emitted token
   (plus a final `finish()` flush) must exactly reproduce the non-eager
   `tokens()` output, checked on the same three test families above.

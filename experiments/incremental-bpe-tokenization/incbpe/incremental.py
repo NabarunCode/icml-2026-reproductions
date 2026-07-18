@@ -1,40 +1,48 @@
 """Incremental BPE: maintaining theta(s) one byte at a time.
 
 Implements the Prefix Last-Token Condition (paper Definition 4.1)
-literally. Two search strategies are provided, kept side by side
-deliberately so the newer one can be continuously cross-checked against
-the older, already-oracle-validated one:
+literally. Three search strategies are provided, kept side by side
+deliberately so each newer one is continuously cross-checked against an
+older, already-validated one on every single run:
 
 - ``_search_by_length`` (the original Phase 4 pass): checks every
   canonical string-suffix of the buffer independently, longest passing
   one wins. Simple, clearly correct, but O(t) candidates per byte.
-- ``_search_tree_walk`` (this pass): walks the Successor Forest
-  top-down via real parent/child edges, starting from the atomic token
-  for the newly-fed byte and descending into whichever child (there is
-  at most one, per the Monotonic Path Property's mutual-exclusion
-  corollary) still satisfies Definition 4.1, stopping when none does.
-  This only ever visits nodes that are actual forest descendants of the
-  root, typically O(depth) of them rather than O(t) - a real complexity
-  improvement, verified against the length-based search on every run.
+- ``_search_tree_walk``: walks the Successor Forest top-down via real
+  parent/child edges, starting from the atomic token for the newly-fed
+  byte and descending into whichever child (there is at most one, per
+  the Monotonic Path Property's mutual-exclusion corollary) still
+  satisfies Definition 4.1, stopping when none does. Only visits actual
+  forest descendants of the root, typically O(depth) of them rather
+  than O(t).
+- ``_search_binary_walk`` (this pass): same top-down walk, but at each
+  level, finding the one valid child (if any) via an O(1) DFS-interval
+  test plus O(log branching-factor) binary search over pre-sorted,
+  provably-disjoint sibling intervals (Section 4.3's "Mutual Exclusion
+  among Siblings"; see ``dfs_interval.py``), instead of checking every
+  child directly. This is O(depth * log branching) rather than
+  O(depth * average branching) - a real per-level speedup.
 
-SCOPING NOTE (honest, not a silent shortcut): this is still not the
-paper's full O(log^2 t)-per-byte algorithm. What's implemented:
+A real Aho-Corasick automaton (Section 5.2, ``aho_corasick.py``) gives
+tau(sc) in O(1) amortized; used as a cross-check (theta(sc) can never be
+longer than tau(sc)) on every run.
 
-- Finding the longest suffix token, tau(sc), via a real Aho-Corasick
-  automaton (Section 5.2, see ``aho_corasick.py``) in O(1) amortized -
-  used here as a cross-check (theta(sc) can never be longer than
-  tau(sc)), not yet as the search's own starting point.
-
-What's still deferred:
-
-- The O(1) DFS-interval test and Centroid Decomposition (Sections 4.3,
-  5.3): ``_search_tree_walk`` finds the right child at each tree level
-  by checking every child directly (a handful in practice) rather than
-  via interval arithmetic over a centroid-decomposed search tree, so it
-  is not yet O(log t) *per level* in the worst case, only in typical
-  cases where branching factor is small. Needed before Claims 3-4
-  (performance) can be benchmarked at adversarial scale (e.g. the deep,
-  wide dictionaries Appendix J constructs).
+SCOPING NOTE (honest, not a silent shortcut): the ONE thing genuinely
+still missing from the paper's O(log^2 t)-per-byte bound is Centroid
+Decomposition (Section 5.3): ``_search_binary_walk`` reduces each
+*level's* cost to O(log branching), but still visits O(depth) *levels*
+in the worst case, since nothing yet rebalances the raw Successor Forest
+into an O(log t)-height Centroid Search Tree. On a deliberately deep,
+narrow-branching dictionary (Appendix J's adversarial construction,
+depth ~t), this implementation is closer to O(t) than O(log^2 t) -
+concretely worse than the paper's guarantee, not just "unverified."
+Investigated during development but not completed: the reference
+implementation's centroid-removal mechanism recursively re-decomposes
+the "remainder" left after extracting each centroid, and getting that
+exactly right (rather than a plausible-looking but subtly wrong
+approximation) needs more dedicated time than was available in this
+pass. Left as a precise, narrowly-scoped follow-up rather than
+attempted and possibly gotten wrong silently.
 
 See ``../README.md`` for the full status table.
 """
@@ -45,6 +53,8 @@ from dataclasses import dataclass, field
 
 from incbpe.aho_corasick import ROOT_STATE, AhoCorasick
 from incbpe.aho_corasick import build as build_automaton
+from incbpe.dfs_interval import DFSIntervals
+from incbpe.dfs_interval import build as build_intervals
 from incbpe.normalize import NormalizedDict
 from incbpe.successor_forest import ROOT as FOREST_ROOT
 from incbpe.successor_forest import SuccessorForest
@@ -63,13 +73,15 @@ class IncrementalTokenizer:
     normalized: NormalizedDict
     forest: SuccessorForest
     automaton: AhoCorasick
+    intervals: DFSIntervals
     max_token_length: int
 
     @staticmethod
     def build(normalized: NormalizedDict, forest: SuccessorForest) -> IncrementalTokenizer:
         max_len = max((len(t) for t in normalized.dict.vocab.tokens if t), default=1)
         automaton = build_automaton(normalized)
-        return IncrementalTokenizer(normalized, forest, automaton, max_len)
+        intervals = build_intervals(normalized, forest)
+        return IncrementalTokenizer(normalized, forest, automaton, intervals, max_len)
 
     def new_run(self) -> Run:
         return Run(self, bytearray(), [])
@@ -90,9 +102,14 @@ class Run:
         """Append one byte and return the new theta (last token)."""
         self.buffer.append(byte)
         self.ac_state = self.tokenizer.automaton.step(self.ac_state, byte)
-        theta = self._search_tree_walk()
+        theta = self._search_binary_walk()
 
         if self.verify_monotonic:
+            tree_walk = self._search_tree_walk()
+            assert theta == tree_walk, (
+                f"binary-search walk ({theta}) disagrees with the plain "
+                f"tree walk ({tree_walk}) on buffer {bytes(self.buffer)!r}"
+            )
             reference = self._search_by_length()
             assert theta == reference, (
                 f"tree-walk search ({theta}) disagrees with the length-based "
@@ -171,6 +188,44 @@ class Run:
                 return current
             current = next_node
 
+    def _search_binary_walk(self) -> TokenId:
+        """Like ``_search_tree_walk``, but finds the valid child at each
+        level via ``DFSIntervals.find_valid_child`` (O(1) interval test
+        + O(log branching) binary search over disjoint sibling ranges)
+        instead of checking every child directly.
+
+        Note this does *not* pre-filter children by whether they are
+        literally a string-suffix of the current buffer (unlike
+        ``_search_tree_walk``'s explicit ``buffer.endswith`` check).
+        That filter turns out to be unnecessary here: Appendix E's
+        Claim 4 (the answer node has no children satisfying Definition
+        4.1) is proved for *every* forest child of theta(s), not just
+        ones that happen to match the buffer - so if no valid child is
+        found structurally, none exists at all, matching or not. This
+        is exactly the kind of subtle claim worth not taking on faith:
+        it is why ``feed()`` cross-checks this method against
+        ``_search_tree_walk`` (which does filter) on every single byte
+        when ``verify_monotonic=True``, across hundreds of random
+        dictionaries in the test suite.
+        """
+        normalized = self.tokenizer.normalized
+        intervals = self.tokenizer.intervals
+        n = len(self.buffer)
+        last_byte = bytes([self.buffer[-1]])
+        current = normalized.dict.vocab.find_token_id(last_byte)
+        assert current is not None and normalized.is_atomic(current), (
+            f"byte {last_byte!r} has no atomic vocabulary entry - "
+            "out-of-vocabulary bytes are not yet supported"
+        )
+
+        while True:
+            suc_len = len(normalized.dict.vocab[current])
+            query = self._theta_of_prefix(n - suc_len)
+            child = intervals.find_valid_child(current, query)
+            if child is None:
+                return current
+            current = child
+
     def _search_by_length(self) -> TokenId:
         """Reference implementation from the first Phase 4 pass: checks
         every canonical string-suffix of the buffer independently,
@@ -241,17 +296,32 @@ class Run:
         length 2, even though "abc" itself has length 3).
         """
         normalized = self.tokenizer.normalized
-        forest = self.tokenizer.forest
         rule = normalized.dict.rules[normalized.priority[token_id]]
-        pre_t = rule.pre
         suc_len = len(normalized.dict.vocab[rule.suc])
         prev_theta = self._theta_of_prefix(n - suc_len)
+        return definition_4_1_ancestor_walk(normalized, self.tokenizer.forest, token_id, prev_theta)
 
-        if prev_theta is None:
-            return False  # empty prefix can never reach a real token
-        if prev_theta == pre_t:
-            return True  # reachable with no intermediate child: trivially satisfied
-        if not forest.is_ancestor_or_self(pre_t, prev_theta):
-            return False  # Reachability fails
-        u = forest.child_towards(pre_t, prev_theta)
-        return normalized.priority[token_id] < normalized.priority[u]  # Priority dominance
+
+def definition_4_1_ancestor_walk(
+    normalized: NormalizedDict,
+    forest: SuccessorForest,
+    token_id: TokenId,
+    prev_theta: TokenId | None,
+) -> bool:
+    """Definition 4.1 (Prefix Last-Token Condition), non-atomic case,
+    checked by directly walking Successor Forest ancestor pointers -
+    O(depth) per call. Factored out of :class:`Run` so it can be used as
+    a standalone cross-check oracle for the O(1) DFS-interval test in
+    ``dfs_interval.py`` (see ``tests/test_dfs_interval.py``).
+    """
+    rule = normalized.dict.rules[normalized.priority[token_id]]
+    pre_t = rule.pre
+
+    if prev_theta is None:
+        return False  # empty prefix can never reach a real token
+    if prev_theta == pre_t:
+        return True  # reachable with no intermediate child: trivially satisfied
+    if not forest.is_ancestor_or_self(pre_t, prev_theta):
+        return False  # Reachability fails
+    u = forest.child_towards(pre_t, prev_theta)
+    return normalized.priority[token_id] < normalized.priority[u]  # Priority dominance
