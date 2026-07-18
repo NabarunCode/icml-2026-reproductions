@@ -18,19 +18,23 @@ ROOT: TokenId | None = None
 
 @dataclass(frozen=True)
 class SuccessorForest:
-    """Parent pointers over canonical tokens: ``parent[t] = suc(t)``.
+    """Parent *and* children pointers over canonical tokens.
 
-    Atomic tokens (and the implicit virtual root) map to :data:`ROOT`.
-    This is deliberately just the parent-pointer graph, not the full
-    node/children/DFS-timestamp structure the reference implementation
-    builds (``successor.rs``) - see ``incremental.py`` for why: this
-    reproduction's first correctness pass walks ancestor chains directly
-    instead of using the O(1) DFS-interval trick (paper Section 4.3),
-    so the extra bookkeeping isn't needed yet.
+    ``parent[t] = suc(t)`` (``ROOT`` for atomic tokens). ``children[p]``
+    lists every token whose ``suc`` is ``p``, sorted from lowest to
+    highest priority (largest to smallest rule id) - the paper's own DFS
+    visiting order (Section 4.3), kept here for consistency even though
+    this module does not (yet) build the DFS timestamps / O(1)
+    valid-interval structure the reference implementation uses
+    (``suf_suc.rs``) - see ``incremental.py`` for why: the tree-walk
+    search added there checks every child directly (there are only ever
+    a handful at each node in practice) rather than using the O(1)
+    interval trick, deferred along with Centroid Decomposition.
     """
 
     dict: NormalizedDict
     parent: dict[TokenId, TokenId | None]
+    children: dict[TokenId | None, list[TokenId]]
 
     def is_ancestor_or_self(self, ancestor: TokenId, node: TokenId) -> bool:
         """Does walking ``node``'s parent chain reach ``ancestor``?"""
@@ -59,12 +63,18 @@ class SuccessorForest:
 
 def build(normalized: NormalizedDict) -> SuccessorForest:
     parent: dict[TokenId, TokenId | None] = {}
+    children: dict[TokenId | None, list[TokenId]] = {}
     for token_id in range(len(normalized.dict.vocab)):
         if not normalized.is_canonical(token_id):
             continue
         if normalized.is_atomic(token_id):
             parent[token_id] = ROOT
-            continue
-        rule = normalized.dict.rules[normalized.priority[token_id]]
-        parent[token_id] = rule.suc
-    return SuccessorForest(normalized, parent)
+        else:
+            rule = normalized.dict.rules[normalized.priority[token_id]]
+            parent[token_id] = rule.suc
+        children.setdefault(parent[token_id], []).append(token_id)
+
+    for kids in children.values():
+        kids.sort(key=lambda t: -normalized.priority[t])  # lowest priority (largest rule id) first
+
+    return SuccessorForest(normalized, parent, children)

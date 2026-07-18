@@ -1,10 +1,12 @@
 # Claim 2 — Algorithm Design (Aho–Corasick + Centroid Decomposition + Eager Output)
 
-**Status:** ◐ in progress — the search algorithm's *correctness* is
-implemented and tested (Phase 4); the three specific mechanisms named in
-the claim (Aho–Corasick, Centroid Decomposition, eager output) are **not
-yet built** — see Implementation below. This claim cannot be marked
-verified until they are.
+**Status:** ◐ in progress — all three named mechanisms now exist and are
+tested (Aho–Corasick, tree navigation, eager output), but tree navigation
+is not yet the specific Centroid-Decomposition/O(1)-interval mechanism
+the claim describes, and eager output is not yet its specific O(1)-
+amortized two-pointer mechanism — see Implementation below. This claim
+cannot be marked verified until the *mechanisms*, not just the
+*results*, match.
 
 ## Claim statement
 
@@ -54,33 +56,56 @@ example the way Claim 1's tree search has.
 
 ## Implementation
 
-**Built so far** (`experiments/incremental-bpe-tokenization/incbpe/incremental.py`):
-a correct incremental search that finds θ(sc) by checking every canonical
-suffix-token candidate of the buffer directly against Definition 4.1
-(via a Successor-Forest ancestor walk), taking the longest one that
-passes. This reproduces the *result* of the paper's search (same θ,
-verified — see Claim 1) but not yet its *mechanism*: no Aho–Corasick
-automaton (candidates are found by scanning lengths against the
-vocabulary, O(t) instead of O(1)) and no Centroid Decomposition (each
-candidate check is an O(depth) ancestor walk instead of an O(1)
-DFS-interval test descending an O(log t)-height search tree). This was a
-deliberate scoping decision (see `experiments/.../README.md`
-"Limitations") to de-risk getting Definition 4.1 itself right before
-adding the performance machinery on top — worth revisiting once the
-correctness base is solid and Claim 3/4 benchmarking makes the speedup
-necessary. **Not yet started:** eager output (Section 6) has no
-implementation at all yet.
+**Built now** (`experiments/incremental-bpe-tokenization/incbpe/`):
+
+- `aho_corasick.py` — a genuine Aho–Corasick automaton (trie + failure
+  links + per-state longest-recognized-token, classic construction),
+  giving τ(sc) in O(1) amortized per byte. Not yet the reference's
+  eagerly-precomputed square-root-tiled transition table (Appendix F) —
+  that's a memory/engineering optimization on top of the same automaton,
+  not a different mechanism, and not needed for correctness.
+- `incremental.py::_search_tree_walk` — replaces the original length-
+  scanning search with a genuine top-down walk of the Successor Forest:
+  starts at the atomic root for the new byte, descends into whichever
+  child (at most one, per Theorem 4.2's mutual-exclusion corollary)
+  still satisfies Definition 4.1, stops when none does. This is real
+  tree navigation, cross-checked against τ(sc) (must never exceed it)
+  and against the original length-scanning search on every single test
+  run — but the per-node check is still an O(depth) ancestor walk
+  (`_satisfies_condition`), not the paper's O(1) DFS-interval test, and
+  there is no Centroid Search Tree — so it's not yet O(log²t) on a
+  deliberately deep, narrow dictionary (Appendix J's adversarial
+  construction).
+- `eager.py` — a working eager-output implementation, built directly
+  from Section 6.1's definition (gather every live candidate's full
+  backtrack chain, take their longest common prefix) rather than
+  Section 6.2's incremental two-pointer bookkeeping. Correct (see
+  Experiment), but recomputes from scratch each byte rather than being
+  O(1) amortized.
+
+**Still not built:** the DFS-interval O(1) test and Centroid
+Decomposition (§4.3, §5.3) — the one substantive remaining gap, flagged
+consistently across this repository rather than silently dropped.
 
 ## Experiment
 
-Done for the search-correctness half: `tests/test_incremental.py`
-differentially tests the incremental search against the from-scratch
-oracle across 200 random dictionaries/strings, the paper's repeated-
-character family, and the real reference-implementation traces from
-Phase 3 — "same tokenization result, every prefix of many random and
-adversarial strings," exactly as originally planned here, just not yet
-"faster" (see Implementation). Eager output and the Aho-Corasick/Centroid
-pieces have no experiments yet since they don't exist yet.
+- `tests/test_aho_corasick.py` — automaton output checked against a
+  brute-force "longest matching vocab suffix" scan, on the recovered
+  Figure-2-variant example and 100 randomized dictionaries.
+- `tests/test_incremental.py` — as before (200 random dictionaries, the
+  repeated-character family, real reference-implementation traces),
+  now *also* asserting on every byte that the tree-walk search agrees
+  with the original length-scanning search and that θ(sc) never exceeds
+  τ(sc) from the automaton.
+- `tests/test_eager.py` — concatenating every eagerly-emitted token
+  (plus a final flush) exactly reproduces the non-eager tokenization,
+  checked across the same three test families.
+
+All of the above pass. "Same tokenization result, faster" is now true
+for the search (real tree navigation replacing brute-force length
+scanning) and eager output now exists and is verified — what's not yet
+true is "as fast as the paper's specific claimed complexity," which
+needs Centroid Decomposition.
 
 ## Benchmark
 

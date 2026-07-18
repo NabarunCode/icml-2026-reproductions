@@ -15,48 +15,60 @@ and tested against that reference where useful.
 | Dictionary (ordered merge rules) | `incbpe/dictionary.py` | §3.1 | Done |
 | Standard-BPE oracle (from scratch) | `incbpe/oracle.py` | §3.1, Eq. 1 | Done — this is the ground-truth definition everything else is tested against |
 | Normalization (canonical tokens) | `incbpe/normalize.py` | §3.3 | Done, byte-level atomicity only (see Limitations) |
-| Successor Forest | `incbpe/successor_forest.py` | §3.4 | Done — parent pointers only (see Limitations) |
-| Incremental theta(s) search | `incbpe/incremental.py` | §4 (Def. 4.1, Thm. 4.2), §5.1 | Done, **not yet asymptotically optimal** (see Limitations) |
-| Eager output | — | §6 | **Not implemented yet** |
-| Aho–Corasick automaton | — | §5.2 | **Not implemented yet** |
-| Centroid Decomposition | — | §5.3 | **Not implemented yet** |
+| Successor Forest (parent + children) | `incbpe/successor_forest.py` | §3.4 | Done |
+| Aho–Corasick automaton | `incbpe/aho_corasick.py` | §5.2 | Done — O(1)-amortized longest-suffix lookup; not yet wired as the search's own starting point (see Limitations) |
+| Incremental theta(s) search | `incbpe/incremental.py` | §4 (Def. 4.1, Thm. 4.2), §5.1, §5.3 (partial) | Done, **tree-walk, not yet centroid-decomposed** (see Limitations) |
+| Eager output | `incbpe/eager.py` | §6 | Done, **definition-first, not yet the O(1)-amortized two-pointer mechanism** (see Limitations) |
+| Centroid Decomposition / DFS-interval O(1) test | — | §4.3, §5.3 | **Not implemented yet** |
 | Appendix A properization | — | Appendix A | **Not implemented yet** |
 
 ## Limitations (explicit, not silent)
 
-This is a **correctness-first** implementation, deliberately scoped to
-verify Claim 1 (Monotonic Path Property) and the structural half of
-Claim 2 (the algorithm's design correctness), not yet the performance
-claims (3, 4), which need the pieces marked "not implemented yet" above:
+This is still a **correctness-first** implementation. Every mechanism
+Claim 2 names now exists (Aho–Corasick, tree navigation, eager output),
+but none has yet received the paper's specific O(1)/O(log t) speedup —
+that's the one substantive gap left before Claims 3–4 (performance) can
+be benchmarked at realistic or adversarial scale:
 
-1. **Finding the longest suffix token** is done by scanning candidate
-   lengths directly against the vocabulary (`incremental.py::_search`),
-   O(t) per byte, instead of O(1) via an Aho–Corasick automaton
-   (Section 5.2).
-2. **Finding theta(sc) among candidates** is done by checking every
-   candidate independently via a direct ancestor-walk implementation of
-   Definition 4.1 (`incremental.py::_satisfies_condition`), O(depth) per
-   check, instead of O(log t) via the DFS-interval + Centroid
-   Decomposition machinery (Sections 4.3, 5.3). Worst case this is
-   O(t · depth) per byte, not the paper's O(log²t).
-3. **Byte-level atomicity only** (`normalize.py`) — the reference
+1. **Aho–Corasick gives tau(sc) in O(1) amortized** (`aho_corasick.py`),
+   and is used as a cross-check (theta(sc) can never be longer than
+   tau(sc), asserted on every byte when `verify_monotonic=True`) — but
+   the search itself (`incremental.py::_search_tree_walk`) doesn't yet
+   use it as its own starting point; it starts from the atomic root and
+   walks down instead.
+2. **Finding theta(sc) is a top-down tree walk**
+   (`_search_tree_walk`), visiting real Successor Forest descendants of
+   the root and checking each candidate child directly against
+   Definition 4.1 (an O(depth) ancestor-walk check per node,
+   `_satisfies_condition`), rather than the paper's O(1) DFS-interval
+   test navigated via an O(log t)-height Centroid Search Tree (§4.3,
+   §5.3). This is faster than the original length-scanning approach
+   (only visits actual tree nodes, not every possible string length),
+   but is not yet O(log²t) in the worst case — a maximally deep,
+   narrow-branching dictionary (like Appendix J's adversarial
+   construction) would still cost close to O(depth) per byte here.
+3. **Eager output recomputes the common ancestral path directly from
+   its definition** (`eager.py`) — gather every candidate's full
+   backtrack chain and take their longest common prefix — rather than
+   maintaining Section 6.2's two-pointer Active Frontier incrementally.
+   Correct (verified against non-eager output on every test), but
+   O(window size × chain length) per byte, not O(1) amortized.
+4. **Byte-level atomicity only** (`normalize.py`) — the reference
    implementation's UTF-8-codepoint-level mode is not ported. This
    matches how real byte-level BPE tokenizers (GPT-style, CodeLlama,
    tiktoken encodings) actually work, so it's sufficient for Claim 3.
-4. **No properization** (Appendix A) — dictionaries that need
+5. **No properization** (Appendix A) — dictionaries that need
    SentencePiece-semantics reconciliation (e.g. Gemma-3's tokenizer,
    per the paper's own Appendix A.6 finding) will have some tokens
    correctly detected as non-canonical rather than repaired. Needed
    before Claim 3 can use arbitrary real tokenizer vocabularies as-is.
-5. **No eager output** (Section 6) yet — Claim 2's algorithm-design
-   description is only partially reproduced (the incremental search,
-   not the streaming-emission half).
 
 None of this is a shortcut taken silently — each gap is exactly what's
-still needed to move from "the algorithm is structurally correct" (this
-implementation, now) to "the algorithm is also this fast" (needed for
-Claims 3–4, not yet attempted). Closing gaps 1–2 is the next planned
-step in Phase 4, before Phase 5 (benchmarking).
+still needed to move from "the algorithm is structurally and
+mechanistically correct" (this implementation, now) to "the algorithm is
+also this fast" (needed for Claims 3–4, not yet attempted). Closing gap 2
+(Centroid Decomposition) is the next planned step in Phase 4, before
+Phase 5 (benchmarking) can honestly begin.
 
 ## Verification approach
 
@@ -69,6 +81,9 @@ Every claim of correctness here is backed by a test, not by inspection:
   checked against the exact structure recovered from the reference
   implementation's own test suite in Phase 3 (see
   `../../papers/incremental-bpe-tokenization/paper/implementation-notes.md`).
+- **`tests/test_aho_corasick.py`** — the automaton checked against a
+  brute-force "longest matching vocab suffix" scanner, on the recovered
+  Figure-2-variant example and 100 randomized dictionaries.
 - **`tests/test_incremental.py`**:
   - Exact reproduction of the real θ-traces captured by running the
     reference implementation's own tests (`cargo test ... -- --nocapture`,
@@ -80,9 +95,15 @@ Every claim of correctness here is backed by a test, not by inspection:
     (Section 7.2 / Appendix H.2), across several rule sets that build
     deep merge chains.
   - Every single one of the above also runs with `verify_monotonic=True`,
-    which empirically checks Theorem 4.2 / Claim 1's Upward Closure on
-    every byte fed, not just the final answer — i.e., every test doubles
-    as a Theorem 4.2 stress test.
+    which — on every byte fed, not just the final answer — (a) empirically
+    checks Theorem 4.2 / Claim 1's Upward Closure, (b) cross-checks the
+    tree-walk search against the original length-scanning search (kept
+    specifically as a reference oracle for this), and (c) asserts
+    theta(sc) is never longer than tau(sc) from the Aho–Corasick
+    automaton.
+- **`tests/test_eager.py`** — concatenating every eagerly-emitted token
+  (plus a final `finish()` flush) must exactly reproduce the non-eager
+  `tokens()` output, checked on the same three test families above.
 
 ## Running the tests
 

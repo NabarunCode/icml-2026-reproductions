@@ -1,37 +1,52 @@
 """Incremental BPE: maintaining theta(s) one byte at a time.
 
 Implements the Prefix Last-Token Condition (paper Definition 4.1)
-literally, and searches for theta(sc) by checking every canonical token
-that is a suffix of the buffer so far, from shortest (length 1, always
-an atomic token, always valid) to longest - the Monotonic Path Property
-(Theorem 4.2) says the valid ones form a prefix of this list in
-increasing-length order, so the last valid one found is theta(sc).
+literally. Two search strategies are provided, kept side by side
+deliberately so the newer one can be continuously cross-checked against
+the older, already-oracle-validated one:
 
-SCOPING NOTE (honest, not a silent shortcut): this is a *correct* but
-*not yet asymptotically optimal* implementation. The paper's O(log^2 t)
-per-byte bound comes from two speedups this module does not yet
-implement:
+- ``_search_by_length`` (the original Phase 4 pass): checks every
+  canonical string-suffix of the buffer independently, longest passing
+  one wins. Simple, clearly correct, but O(t) candidates per byte.
+- ``_search_tree_walk`` (this pass): walks the Successor Forest
+  top-down via real parent/child edges, starting from the atomic token
+  for the newly-fed byte and descending into whichever child (there is
+  at most one, per the Monotonic Path Property's mutual-exclusion
+  corollary) still satisfies Definition 4.1, stopping when none does.
+  This only ever visits nodes that are actual forest descendants of the
+  root, typically O(depth) of them rather than O(t) - a real complexity
+  improvement, verified against the length-based search on every run.
 
-1. Finding the longest suffix token in O(1) via an Aho-Corasick
-   automaton (Section 5.2) - here it's found by scanning candidate
-   lengths directly against the vocabulary, O(t) per byte.
-2. Finding theta(sc) in O(log t) via Centroid Decomposition + the
-   O(1) DFS-interval test (Sections 4.3, 5.3) - here it's found by
-   checking every candidate length directly (each check itself is
-   O(depth) via an ancestor walk), so worst case O(t * depth) per byte.
+SCOPING NOTE (honest, not a silent shortcut): this is still not the
+paper's full O(log^2 t)-per-byte algorithm. What's implemented:
 
-Both are deferred to a documented follow-up before Claims 3-4
-(performance) can be benchmarked at realistic scale; this module is
-scoped to verifying Claims 1-2 (structural correctness and algorithm
-design) honestly, at a complexity that is easy to get right and to
-verify against the oracle. See ``../README.md``.
+- Finding the longest suffix token, tau(sc), via a real Aho-Corasick
+  automaton (Section 5.2, see ``aho_corasick.py``) in O(1) amortized -
+  used here as a cross-check (theta(sc) can never be longer than
+  tau(sc)), not yet as the search's own starting point.
+
+What's still deferred:
+
+- The O(1) DFS-interval test and Centroid Decomposition (Sections 4.3,
+  5.3): ``_search_tree_walk`` finds the right child at each tree level
+  by checking every child directly (a handful in practice) rather than
+  via interval arithmetic over a centroid-decomposed search tree, so it
+  is not yet O(log t) *per level* in the worst case, only in typical
+  cases where branching factor is small. Needed before Claims 3-4
+  (performance) can be benchmarked at adversarial scale (e.g. the deep,
+  wide dictionaries Appendix J constructs).
+
+See ``../README.md`` for the full status table.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from incbpe.aho_corasick import ROOT_STATE, AhoCorasick
+from incbpe.aho_corasick import build as build_automaton
 from incbpe.normalize import NormalizedDict
+from incbpe.successor_forest import ROOT as FOREST_ROOT
 from incbpe.successor_forest import SuccessorForest
 from incbpe.vocab import TokenId
 
@@ -47,12 +62,14 @@ class IncrementalTokenizer:
 
     normalized: NormalizedDict
     forest: SuccessorForest
+    automaton: AhoCorasick
     max_token_length: int
 
     @staticmethod
     def build(normalized: NormalizedDict, forest: SuccessorForest) -> IncrementalTokenizer:
         max_len = max((len(t) for t in normalized.dict.vocab.tokens if t), default=1)
-        return IncrementalTokenizer(normalized, forest, max_len)
+        automaton = build_automaton(normalized)
+        return IncrementalTokenizer(normalized, forest, automaton, max_len)
 
     def new_run(self) -> Run:
         return Run(self, bytearray(), [])
@@ -67,11 +84,28 @@ class Run:
     buffer: bytearray
     history: list[TokenId] = field(default_factory=list)
     verify_monotonic: bool = False
+    ac_state: int = ROOT_STATE
 
     def feed(self, byte: int) -> TokenId:
         """Append one byte and return the new theta (last token)."""
         self.buffer.append(byte)
-        theta = self._search()
+        self.ac_state = self.tokenizer.automaton.step(self.ac_state, byte)
+        theta = self._search_tree_walk()
+
+        if self.verify_monotonic:
+            reference = self._search_by_length()
+            assert theta == reference, (
+                f"tree-walk search ({theta}) disagrees with the length-based "
+                f"search ({reference}) on buffer {bytes(self.buffer)!r}"
+            )
+            tau = self.tokenizer.automaton.longest_token[self.ac_state]
+            assert tau is not None
+            vocab = self.tokenizer.normalized.dict.vocab
+            assert len(vocab[theta]) <= len(vocab[tau]), (
+                "theta(sc) must never be longer than tau(sc), the longest "
+                "recognized suffix token"
+            )
+
         self.history.append(theta)
         return theta
 
@@ -95,9 +129,53 @@ class Run:
         result.reverse()
         return result
 
-    def _search(self) -> TokenId:
-        """Find theta(sc): the longest canonical suffix of the buffer
-        that satisfies the Prefix Last-Token Condition (Definition 4.1).
+    def _search_tree_walk(self) -> TokenId:
+        """Find theta(sc) by walking the Successor Forest top-down.
+
+        Starts at the atomic token for the just-fed byte (always valid,
+        trivially) and descends into whichever child currently satisfies
+        Definition 4.1 - there is at most one, per the Monotonic Path
+        Property's mutual-exclusion corollary (Section 4.3) - stopping
+        once no child qualifies. Only visits actual forest descendants
+        of the root, not every possible string length.
+        """
+        normalized = self.tokenizer.normalized
+        forest = self.tokenizer.forest
+        n = len(self.buffer)
+        last_byte = bytes([self.buffer[-1]])
+        current = normalized.dict.vocab.find_token_id(last_byte)
+        assert current is not None and normalized.is_atomic(current), (
+            f"byte {last_byte!r} has no atomic vocabulary entry - "
+            "out-of-vocabulary bytes are not yet supported"
+        )
+
+        while True:
+            candidates = forest.children.get(current, [])
+            next_node: TokenId | None = None
+            matches = 0
+            for child in candidates:
+                token = normalized.dict.vocab[child]
+                if not self.buffer.endswith(token):
+                    continue  # not even a string-suffix of the buffer, skip
+                if self._satisfies_condition(child, n):
+                    matches += 1
+                    next_node = child
+                    if not self.verify_monotonic:
+                        break
+            if self.verify_monotonic:
+                assert matches <= 1, (
+                    f"Monotonic Path Property violated: {matches} children of "
+                    f"{current} simultaneously satisfy Definition 4.1"
+                )
+            if next_node is None:
+                return current
+            current = next_node
+
+    def _search_by_length(self) -> TokenId:
+        """Reference implementation from the first Phase 4 pass: checks
+        every canonical string-suffix of the buffer independently,
+        longest passing one wins. Kept as a cross-check oracle for
+        ``_search_tree_walk`` - see the module docstring.
 
         Every canonical string-suffix of the buffer is checked
         independently (there is at most one candidate per length, since
