@@ -33,7 +33,7 @@ Concretely, three separate mechanisms are claimed to compose correctly:
 ## Explanation
 
 Full write-up in
-[`../../paper/theory-notes.md`](../../paper/theory-notes.md) §§6–9.
+[`../../notes/theory-notes.md`](../../notes/theory-notes.md) §§6–9.
 Summary: Aho–Corasick gives the longest currently-recognized vocabulary
 suffix in O(1) per character (a well-known technique, correctly applied —
 not this paper's novel contribution); Centroid Decomposition is what
@@ -45,7 +45,7 @@ emits a token permanently once it's outside every live candidate's reach.
 
 ## Mathematics
 
-See `../../paper/theory-notes.md` §7 for the plain-language derivation of
+See `../../notes/theory-notes.md` §7 for the plain-language derivation of
 why O(log t) × O(log t) = O(log²t) (CST height × sibling binary search),
 and §9 for why eager output's overhead is amortized O(1)/byte (each
 Prefix-Tree-of-Tokens node enters and leaves the tracked window at most
@@ -58,7 +58,7 @@ example the way Claim 1's tree search has.
 
 ## Implementation
 
-**Built now** (`experiments/incremental-bpe-tokenization/incbpe/`):
+**Built now** (`../../experiments/incbpe/`):
 
 - `aho_corasick.py` — a genuine Aho–Corasick automaton (trie + failure
   links + per-state longest-recognized-token, classic construction),

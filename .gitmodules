@@ -1,3 +1,3 @@
-[submodule "papers/incremental-bpe-tokenization/reference/mtc-inc-bpe"]
-	path = papers/incremental-bpe-tokenization/reference/mtc-inc-bpe
+[submodule "papers/incremental-bpe-tokenization/references/mtc-inc-bpe"]
+	path = papers/incremental-bpe-tokenization/references/mtc-inc-bpe
 	url = https://github.com/ModelTC/mtc-inc-bpe.git

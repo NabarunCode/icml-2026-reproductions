@@ -66,11 +66,22 @@ and status. Each claim has its own folder under [`claims/`](claims/):
 
 ## Directory contents
 
+This paper is a fully self-contained research project (see
+`docs/ARCHITECTURE.md` at the repo root):
+
 ```
 incremental-bpe-tokenization/
-  README.md                        # this file
-  paper/                           # the paper PDF (with annotations)
-  reference/mtc-inc-bpe/            # pinned git submodule, official Rust implementation
-  resources/                       # notes on official resources (this file's link table, expanded)
-  claims/                          # one folder per claim, per docs/WORKFLOW.md
+  README.md                # this file
+  PROVENANCE.md            # per-file independence classification (integrity record)
+  paper/                   # the paper PDF (with annotations)
+  supplementary/           # supplementary material (empty so far)
+  notes/                   # Phase 1-3 artifacts: reading / theory / implementation notes
+  claims/                  # one folder per claim, per docs/WORKFLOW.md
+  experiments/             # the reproduction itself: installable `incbpe` package + tests
+  benchmarks/              # Phase 5 benchmark scripts + raw run output
+  results/                 # curated final numbers + environment.json + checklists
+  figures/                 # generated plots (committed with generating code)
+  scripts/                 # paper-specific CLI helpers
+  references/mtc-inc-bpe/  # pinned git submodule, official Rust implementation
+  trackio/                 # Phase 7 logbook publishing recipe
 ```

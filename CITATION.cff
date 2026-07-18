@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: >-
+  If you use this repository (its reproduction code, benchmark protocol,
+  or infrastructure), please cite it as below. Please also cite the
+  original paper(s) being reproduced — reproduction is not authorship of
+  the original work.
+title: "ICML 2026 Reproductions"
+type: software
+authors:
+  - name: "NabarunCode"
+repository-code: "https://github.com/NabarunCode/icml-2026-reproductions"
+license: MIT
+date-released: "2026-07-18"
+keywords:
+  - reproducibility
+  - machine-learning
+  - tokenization
+  - benchmarking
+references:
+  - type: conference-paper
+    title: "Incremental BPE Tokenization"
+    authors:
+      - family-names: "Jiang"
+        given-names: "Shenghu"
+      - family-names: "Gong"
+        given-names: "Ruihao"
+    conference:
+      name: "International Conference on Machine Learning (ICML)"
+    year: 2026
+    url: "https://arxiv.org/abs/2605.30813"

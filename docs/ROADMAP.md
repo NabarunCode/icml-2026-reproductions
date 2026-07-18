@@ -14,14 +14,14 @@ Official implementation: [ModelTC/mtc-inc-bpe](https://github.com/ModelTC/mtc-in
 
 | Phase | Status | Notes |
 |---|---|---|
-| 0. Repository setup | ☑ | Directory structure, docs, official resources, roadmap, Trackio prep done 2026-07-18. |
-| 1. Read paper | ☑ | Full reading notes written 2026-07-18 — see `papers/incremental-bpe-tokenization/paper/reading-notes.md`. |
-| 2. Understand theory | ☑ | First-principles write-up done 2026-07-18 — see `papers/incremental-bpe-tokenization/paper/theory-notes.md`. Built and mechanically verified our own minimal example (not the paper's Figure 2, which didn't extract as trustworthy structured data). |
-| 3. Understand implementation | ☑ | Verified module map done 2026-07-18 — see `papers/incremental-bpe-tokenization/paper/implementation-notes.md`. Bonus: found the reference implementation's own test suite preserves a 13/14-rule variant of the paper's Figure 2 example; ran it with `cargo test` for authoritative ground-truth θ-traces and forest structure. |
-| 4. Implement | ◐ | Core incremental search implemented in Python 2026-07-18 (`experiments/incremental-bpe-tokenization/`), extended same day in two more passes: (2) real Aho-Corasick automaton, tree-walk search, eager output; (3) the O(1) DFS-interval test (§4.3) + binary search over provably-disjoint sibling intervals, replacing the O(depth) per-node check. 22/22 tests pass. Remaining gap, now narrowly scoped: Centroid Decomposition (§5.3) — bounds the *number of tree levels* to O(log t); everything else about the per-level mechanism now matches the paper. See `experiments/incremental-bpe-tokenization/README.md` "Limitations". |
+| 0. Repository setup | ☑ | Directory structure, docs, official resources, roadmap, Trackio prep done 2026-07-18. Repository-wide infrastructure hardening (uv workspace, CI, strict typing, benchmark protocol, provenance records, per-paper self-contained layout) completed same day — see `docs/ARCHITECTURE.md`. |
+| 1. Read paper | ☑ | Full reading notes written 2026-07-18 — see `papers/incremental-bpe-tokenization/notes/reading-notes.md`. |
+| 2. Understand theory | ☑ | First-principles write-up done 2026-07-18 — see `papers/incremental-bpe-tokenization/notes/theory-notes.md`. Built and mechanically verified our own minimal example (not the paper's Figure 2, which didn't extract as trustworthy structured data). |
+| 3. Understand implementation | ☑ | Verified module map done 2026-07-18 — see `papers/incremental-bpe-tokenization/notes/implementation-notes.md`. Bonus: found the reference implementation's own test suite preserves a 13/14-rule variant of the paper's Figure 2 example; ran it with `cargo test` for authoritative ground-truth θ-traces and forest structure. |
+| 4. Implement | ◐ | Core incremental search implemented in Python 2026-07-18 (`papers/incremental-bpe-tokenization/experiments/`), extended same day in two more passes: (2) real Aho-Corasick automaton, tree-walk search, eager output; (3) the O(1) DFS-interval test (§4.3) + binary search over provably-disjoint sibling intervals, replacing the O(depth) per-node check. 22/22 tests pass. Remaining gap, now narrowly scoped: Centroid Decomposition (§5.3) — bounds the *number of tree levels* to O(log t); everything else about the per-level mechanism now matches the paper. See `papers/incremental-bpe-tokenization/experiments/README.md` "Limitations". |
 | 5. Benchmark | ☐ | Not started. HF Jobs GPU/compute credit confirmed available via `ICML-2026-agent-repro` org if local compute is insufficient. |
 | 6. Verify claims | ☐ | See the 4 claims below, sourced from the official challenge listing. |
-| 7. Trackio | ☐ | See `trackio/README.md`. Org already joined, GPU credit already granted. |
+| 7. Trackio | ☐ | See `papers/incremental-bpe-tokenization/trackio/README.md`. Org already joined, GPU credit already granted. |
 | 8. GitHub documentation | ☐ | Not started. |
 
 ### The four claims to verify

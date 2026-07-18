@@ -24,7 +24,7 @@ complexity bound would not hold.
 ## Explanation
 
 Full write-up in
-[`../../paper/theory-notes.md`](../../paper/theory-notes.md) (Phase 2).
+[`../../notes/theory-notes.md`](../../notes/theory-notes.md) (Phase 2).
 Summary: because a merge rule can only glue together tokens that are
 *already adjacent*, and can never reach back across a boundary that's
 already settled (boundary elimination), truncating a valid tokenization
@@ -42,7 +42,7 @@ DFS-interval arithmetic that predicts the jump.
 
 ## Mathematics
 
-See `../../paper/theory-notes.md` §§4–7 for the worked-example version.
+See `../../notes/theory-notes.md` §§4–7 for the worked-example version.
 The paper's own proof (Appendix E) proceeds via four claims: upward
 closure, uniqueness of the satisfying child, that θ(s) itself satisfies
 the condition, and that θ(s) is maximal (no child also satisfies it). Not
@@ -55,7 +55,7 @@ work (below) surfaces a case the intuition doesn't cleanly cover.
 ## Implementation
 
 Implemented in
-[`../../../../experiments/incremental-bpe-tokenization/incbpe/incremental.py`](../../../../experiments/incremental-bpe-tokenization/incbpe/incremental.py),
+[`../../experiments/incbpe/incremental.py`](../../experiments/incbpe/incremental.py),
 which codes Definition 4.1 (Prefix Last-Token Condition) directly via a
 Successor Forest ancestor-walk, rather than the paper's O(1) DFS-interval
 shortcut (that speedup is deferred — see the experiment's `README.md`
@@ -73,7 +73,7 @@ Figure-2-variant example recovered in Phase 3, with zero violations.
 ## Experiment
 
 Done for the structural/correctness half (see Implementation above and
-`experiments/incremental-bpe-tokenization/README.md`). Not yet done:
+`../../experiments/README.md`). Not yet done:
 independently re-deriving Appendix E's full four-claim proof line-by-line
 to check for gaps the empirical testing wouldn't surface (empirical
 testing can show the property holds on tested cases, not prove it holds
