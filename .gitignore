@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Trackio local workspace (published separately as HF Spaces, not committed here)
+.trackio/
+
+# OS / editor
+.DS_Store
+*.swp
+
+# Large / regeneratable data
+*.parquet
+*.jsonl.gz
