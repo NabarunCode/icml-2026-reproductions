@@ -12,21 +12,31 @@ full discipline of empirical ML research: read the paper, understand the
 theory, understand the reference implementation, reproduce it, benchmark
 it rigorously, and report honestly what did and did not hold up.
 
-If a result doesn't reproduce, that is a valid, documented outcome — not
-a failure of the repository.
+> If a result doesn't reproduce, that's a valid, documented outcome —
+> not a failure of this repository.
+
+**Contents:** [Principles](#principles) ·
+[Quick start](#quick-start) ·
+[Reproductions](#reproductions) ·
+[Process](#process) ·
+[Repository layout](#repository-layout) ·
+[Benchmarking standard](#benchmarking-standard) ·
+[Coding style](#coding-style) ·
+[License](#license)
+
+---
 
 ## Principles
 
-- **Correctness over speed.** No claim is reported without evidence.
-- **No fabrication.** Numbers are measured, never invented or
-  extrapolated without saying so.
-- **No hidden failures.** Negative and partial results are documented
-  with the same rigor as positive ones.
-- **No moving the goalposts.** Experiments are not modified after the
-  fact to match a paper's reported numbers.
-- **Provenance is explicit.** Every paper carries a `PROVENANCE.md`
-  separating independent reproduction from anything influenced by the
-  official implementation.
+| | |
+|---|---|
+| **Correctness over speed** | No claim is reported without evidence. |
+| **No fabrication** | Numbers are measured, never invented or extrapolated without saying so. |
+| **No hidden failures** | Negative and partial results are documented with the same rigor as positive ones. |
+| **No moving the goalposts** | Experiments are not modified after the fact to match a paper's reported numbers. |
+| **Provenance is explicit** | Every paper carries a `PROVENANCE.md` separating independent reproduction from anything influenced by the official implementation. |
+
+---
 
 ## Quick start
 
@@ -44,6 +54,40 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full developer workflow
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how the repository is
 organized and why.
 
+---
+
+## Reproductions
+
+| Paper | Venue | Status | Verdict | Logbook |
+|---|---|---|---|---|
+| [Incremental BPE Tokenization](papers/incremental-bpe-tokenization/) (Jiang & Gong) | ICML 2026 | ![8/8 phases](https://img.shields.io/badge/phases-8%2F8-brightgreen) | 2 reproduced · 1 partially reproduced · 1 correctness-verified (speedup untestable in Python) — nothing falsified | [Space](https://huggingface.co/spaces/hinabarun/repro-incremental-bpe-tokenization) |
+
+Each row links to a fully self-contained paper folder with its own
+claims, results, raw benchmark runs, and provenance record. New papers
+are added as new rows, never by overwriting a finished one — see
+[`docs/ROADMAP.md`](docs/ROADMAP.md) for the authoritative per-paper
+status.
+
+---
+
+## Process
+
+Every paper moves through the same eight phases, in order, never
+skipping:
+
+```mermaid
+flowchart LR
+    A["0. Setup"] --> B["1. Read"] --> C["2. Theory"] --> D["3. Reference impl"]
+    D --> E["4. Implement"] --> F["5. Benchmark"] --> G["6. Verify claims"]
+    G --> H["7. Publish logbook"] --> I["8. Document"]
+```
+
+The full process, including the per-claim verdict format, is in
+[`docs/WORKFLOW.md`](docs/WORKFLOW.md); per-paper status lives in
+[`docs/ROADMAP.md`](docs/ROADMAP.md).
+
+---
+
 ## Repository layout
 
 Each paper is a **fully self-contained research project**; the root
@@ -56,25 +100,7 @@ holds only infrastructure shared by every paper.
 | `docs/` | Project-wide standards: [workflow](docs/WORKFLOW.md), [roadmap](docs/ROADMAP.md), [architecture](docs/ARCHITECTURE.md), [benchmark protocol](docs/BENCHMARK_PROTOCOL.md), [reproducibility checklist](docs/REPRODUCIBILITY_CHECKLIST.md). |
 | `tests/` | Tests for `repro_core` (each paper's tests live with that paper). |
 
-## Process
-
-Every paper moves through the same eight phases, in order, never
-skipping: read → theory → reference implementation → implement →
-benchmark → verify claims → publish logbook → document. The full
-process, including the per-claim verdict format, is in
-[`docs/WORKFLOW.md`](docs/WORKFLOW.md); per-paper status lives in
-[`docs/ROADMAP.md`](docs/ROADMAP.md).
-
-## Current paper
-
-**Incremental BPE Tokenization** — Shenghu Jiang, Ruihao Gong
-(ICML 2026). **Status: all 8 phases complete.** Verdicts: 2/4 claims
-reproduced, 1 partially, 1 correctness-verified with the speedup
-untestable from Python — nothing falsified. Published logbook:
-[hinabarun/repro-incremental-bpe-tokenization](https://huggingface.co/spaces/hinabarun/repro-incremental-bpe-tokenization).
-Full write-up:
-[`papers/incremental-bpe-tokenization/`](papers/incremental-bpe-tokenization/)
-(claims, results, runs, [provenance](papers/incremental-bpe-tokenization/PROVENANCE.md)).
+---
 
 ## Benchmarking standard
 
@@ -87,12 +113,16 @@ versions, dependency versions) recorded next to every result. Published
 results additionally fill in
 [`docs/REPRODUCIBILITY_CHECKLIST.md`](docs/REPRODUCIBILITY_CHECKLIST.md).
 
+---
+
 ## Coding style
 
 Python ≥ 3.11 (3.12 targeted), `mypy --strict` clean, ruff-formatted,
 docstrings on public functions, small single-purpose functions. No
 speculative abstraction — shared code enters `src/repro_core/` only when
 a second paper needs it.
+
+---
 
 ## License
 
