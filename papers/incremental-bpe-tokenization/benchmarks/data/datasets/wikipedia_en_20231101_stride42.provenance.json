@@ -1,0 +1,11 @@
+{
+  "dataset": "wikimedia/wikipedia",
+  "config": "20231101.en",
+  "revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+  "stride": 42,
+  "target_bytes": 16500000,
+  "documents": 3709,
+  "text_bytes_total": 16502234,
+  "output_file": "wikipedia_en_20231101_stride42.jsonl",
+  "output_sha256": "fd062c7e52ac0f2c1be978fbfc7669f6afe990495a5e43c7aab7a8758ad611c0"
+}
