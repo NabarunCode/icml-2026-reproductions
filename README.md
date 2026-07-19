@@ -68,11 +68,13 @@ process, including the per-claim verdict format, is in
 ## Current paper
 
 **Incremental BPE Tokenization** — Shenghu Jiang, Ruihao Gong
-(ICML 2026). Status: implementation phase (three passes complete, all
-tests passing); benchmarking next. See
+(ICML 2026). **Status: all 8 phases complete.** Verdicts: 2/4 claims
+reproduced, 1 partially, 1 correctness-verified with the speedup
+untestable from Python — nothing falsified. Published logbook:
+[hinabarun/repro-incremental-bpe-tokenization](https://huggingface.co/spaces/hinabarun/repro-incremental-bpe-tokenization).
+Full write-up:
 [`papers/incremental-bpe-tokenization/`](papers/incremental-bpe-tokenization/)
-and its
-[provenance record](papers/incremental-bpe-tokenization/PROVENANCE.md).
+(claims, results, runs, [provenance](papers/incremental-bpe-tokenization/PROVENANCE.md)).
 
 ## Benchmarking standard
 
