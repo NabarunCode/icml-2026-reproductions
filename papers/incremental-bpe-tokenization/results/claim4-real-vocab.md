@@ -8,7 +8,10 @@
 **Scripts:** [`../benchmarks/claim4_real_vocab.py`](../benchmarks/claim4_real_vocab.py),
 [`../benchmarks/claim4_tiktoken_regression.py`](../benchmarks/claim4_tiktoken_regression.py) ·
 **Checklist:** [`CHECKLIST-claim4-real-vocab.md`](CHECKLIST-claim4-real-vocab.md) ·
-Tables via `scripts/analyze_run.py`.
+Tables via `scripts/analyze_run.py`. **Corroborated** on dedicated HF
+Jobs compute (64-core, isolated) — all five slopes here (ours, both
+tiktoken eras, R50K and CL100K) reproduced within ±0.03, see
+[`corroboration-hfjobs.md`](corroboration-hfjobs.md).
 
 ## What was measured
 

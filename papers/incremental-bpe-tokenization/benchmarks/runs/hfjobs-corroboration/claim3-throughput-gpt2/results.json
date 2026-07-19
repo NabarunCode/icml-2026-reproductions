@@ -1,0 +1,103 @@
+{
+  "protocol_version": 1,
+  "description": "Claim 3 groundwork on the paper's English Wikipedia sample (stride-42, revision-pinned) with GPT-2/R50K: correctness at corpus scale vs HF tokenizers (asserted) and vs regex-pre-tokenized tiktoken (measured agreement), eager-vs-non-eager overhead, and baseline throughputs. Python absolute numbers carry no speedup information vs the paper's Rust (protocol section 7).",
+  "command": "uv run python papers/incremental-bpe-tokenization/benchmarks/claim3_throughput_gpt2.py",
+  "seed": null,
+  "slice_bytes": 500000,
+  "tiktoken_agreement_with_whole_string_bpe": false,
+  "environment_file": "environment.json",
+  "benchmarks": [
+    {
+      "name": "ours_feed/slice=500000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 16155214498.5,
+      "stdev_ns": 36631558.7545649,
+      "median_ns": 16153548276.5,
+      "min_ns": 16101977940.0,
+      "max_ns": 16210275642.0,
+      "samples_ns": [
+        16101977940.0,
+        16210275642.0,
+        16151774560.0,
+        16142698012.0,
+        16113900421.0,
+        16155321993.0,
+        16175855359.0,
+        16206744951.0,
+        16123212960.0,
+        16170383147.0
+      ]
+    },
+    {
+      "name": "ours_eager/slice=10000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 11622234984.9,
+      "stdev_ns": 20397778.076088585,
+      "median_ns": 11615084550.5,
+      "min_ns": 11591500943.0,
+      "max_ns": 11652357152.0,
+      "samples_ns": [
+        11614766829.0,
+        11615402272.0,
+        11609662272.0,
+        11651867771.0,
+        11652357152.0,
+        11613608817.0,
+        11608212180.0,
+        11620805590.0,
+        11644166023.0,
+        11591500943.0
+      ]
+    },
+    {
+      "name": "hf_bpe_word/slice=500000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 195588607.9,
+      "stdev_ns": 2509397.8563992176,
+      "median_ns": 194682892.5,
+      "min_ns": 193188280.0,
+      "max_ns": 200936659.0,
+      "samples_ns": [
+        194198032.0,
+        194060977.0,
+        193887242.0,
+        197369454.0,
+        195363440.0,
+        195167753.0,
+        193448279.0,
+        198265963.0,
+        200936659.0,
+        193188280.0
+      ]
+    },
+    {
+      "name": "tiktoken_r50k/slice=500000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 33734129.6,
+      "stdev_ns": 289274.0106973548,
+      "median_ns": 33632201.5,
+      "min_ns": 33419694.0,
+      "max_ns": 34415537.0,
+      "samples_ns": [
+        34415537.0,
+        33550219.0,
+        33577760.0,
+        33970052.0,
+        33419694.0,
+        33711393.0,
+        33556779.0,
+        33591751.0,
+        33672652.0,
+        33875459.0
+      ]
+    }
+  ]
+}

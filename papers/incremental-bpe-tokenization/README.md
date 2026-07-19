@@ -22,7 +22,11 @@ entry #5623 in the [ICML 2026 reproducibility challenge](https://huggingface.co/
 
 Nothing falsified; every verdict links to committed, protocol-compliant
 runs (`results/`, `benchmarks/runs/`, filled checklists, clean-tree
-environment records). Full verdict write-ups: each
+environment records). All scaling-shape slopes were independently
+corroborated on dedicated HF Jobs compute (64-core, isolated) —
+every one reproduced within ±0.03 of the original sandbox measurement,
+see [`results/corroboration-hfjobs.md`](results/corroboration-hfjobs.md).
+Full verdict write-ups: each
 [`claims/<NN>-*/README.md`](claims/) Result/Discussion/Limitations/
 Conclusion sections. File-by-file independence record:
 [`PROVENANCE.md`](PROVENANCE.md).

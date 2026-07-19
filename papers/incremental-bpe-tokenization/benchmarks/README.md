@@ -18,19 +18,24 @@ flag). Curated write-ups live in `../results/`.
 `data/README.md` for provenance); `runs/` holds one directory per
 protocol-grade run.
 
-## Pending: HF Jobs corroboration re-run
+## Done: HF Jobs corroboration re-run (2026-07-19)
 
 Every run above carries the caveat "shared multi-tenant VM, idleness
-not guaranteed." A one-shot re-run of the full suite on HF Jobs
-hardware would corroborate the slopes in a second, quieter environment.
-**Blocked on token scope**: submission returns 403 `job.write` — the
-configured HF token lacks the Jobs permission. Fix: create a token with
-**Jobs write** access (fine-grained token -> enable Jobs; and prefer
-`--namespace ICML-2026-agent-repro` so the org credit is billed), then:
+not guaranteed." The full suite was re-run on dedicated HF Jobs
+compute (`cpu-upgrade` flavor, 64-core) to check whether the measured
+slopes hold on quieter hardware — see
+[`../results/corroboration-hfjobs.md`](../results/corroboration-hfjobs.md)
+for the full side-by-side table. Headline: every slope reproduces
+within ±0.03 of the sandbox measurement; no verdict changed. Raw data:
+`runs/hfjobs-corroboration/<script>/` (committed alongside the
+originals) and the job's own upload,
+[`hinabarun/icml-repro-corroboration-runs`](https://huggingface.co/datasets/hinabarun/icml-repro-corroboration-runs).
+
+Rerun command (same one the job used):
 
 ```bash
 hf jobs run --detach --flavor cpu-upgrade --timeout 2h -s HF_TOKEN \
-  --namespace ICML-2026-agent-repro --name icml-repro-corroboration \
+  --name icml-repro-corroboration \
   python:3.12 bash -c '
 set -ex
 pip -q install uv "huggingface_hub[cli]"
@@ -50,8 +55,6 @@ hf upload hinabarun/icml-repro-corroboration-runs /tmp/runs.tgz hfjobs-cpu-upgra
 echo CORROBORATION-JOB-DONE'
 ```
 
-Results land in the (already-created) dataset repo
-`hinabarun/icml-repro-corroboration-runs`; fold them into `../results/`
-as a corroboration section when available. Note: the verdicts do not
-depend on this — they rest on scaling *shapes*, which are robust to VM
-noise; this is belt-and-suspenders.
+(Ran under the personal namespace — the `ICML-2026-agent-repro` org
+namespace still returns 403 `job.write` even with the current token;
+the personal namespace worked and billed to the account's own credit.)

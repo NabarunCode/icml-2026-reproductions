@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "captured_at_utc": "2026-07-19T14:22:06.504664+00:00",
+  "git": {
+    "commit": "bbac0df0ed7a09a993e04999888007970fc52034",
+    "branch": "claude/icml-2026-reproductions-handover-zvye6y",
+    "dirty": true
+  },
+  "python": {
+    "version": "3.12.13",
+    "implementation": "CPython",
+    "executable": "/repo/.venv/bin/python3"
+  },
+  "os": {
+    "system": "Linux",
+    "release": "6.12.90-120.164.amzn2023.x86_64",
+    "version": "#1 SMP PREEMPT_DYNAMIC Mon Jun  1 16:38:33 UTC 2026",
+    "machine": "x86_64"
+  },
+  "cpu": {
+    "model": "AMD EPYC 7R13 Processor",
+    "logical_cores": 64
+  },
+  "memory": {
+    "total_bytes": 529681854464
+  },
+  "gpu": {
+    "devices": null,
+    "cuda_version": null
+  },
+  "rust": {
+    "rustc_version": null
+  },
+  "packages": {
+    "aiohappyeyeballs": "2.7.1",
+    "aiohttp": "3.14.1",
+    "aiosignal": "1.4.0",
+    "anyio": "4.14.2",
+    "ast_serialize": "0.6.0",
+    "attrs": "26.1.0",
+    "certifi": "2026.6.17",
+    "cfgv": "3.5.0",
+    "charset-normalizer": "3.4.9",
+    "click": "8.4.2",
+    "datasets": "5.0.0",
+    "dill": "0.4.1",
+    "distlib": "0.4.3",
+    "filelock": "3.31.0",
+    "frozenlist": "1.8.0",
+    "fsspec": "2026.4.0",
+    "h11": "0.16.0",
+    "hf-xet": "1.5.2",
+    "httpcore": "1.0.9",
+    "httpx": "0.28.1",
+    "huggingface_hub": "1.24.0",
+    "identify": "2.6.19",
+    "idna": "3.18",
+    "incbpe": "0.1.0",
+    "iniconfig": "2.3.0",
+    "librt": "0.13.0",
+    "multidict": "6.7.1",
+    "multiprocess": "0.70.19",
+    "mypy": "2.3.0",
+    "mypy_extensions": "1.1.0",
+    "nodeenv": "1.10.0",
+    "numpy": "2.5.1",
+    "packaging": "26.2",
+    "pandas": "3.0.3",
+    "pathspec": "1.1.1",
+    "platformdirs": "4.10.1",
+    "pluggy": "1.6.0",
+    "pre_commit": "4.6.0",
+    "propcache": "0.5.2",
+    "pyarrow": "25.0.0",
+    "Pygments": "2.20.0",
+    "pytest": "9.1.1",
+    "python-dateutil": "2.9.0.post0",
+    "python-discovery": "1.4.4",
+    "PyYAML": "6.0.3",
+    "regex": "2026.7.10",
+    "repro-core": "0.1.0",
+    "requests": "2.34.2",
+    "ruff": "0.15.22",
+    "six": "1.17.0",
+    "tiktoken": "0.13.0",
+    "tokenizers": "0.23.1",
+    "tqdm": "4.69.0",
+    "typing_extensions": "4.16.0",
+    "urllib3": "2.7.0",
+    "virtualenv": "21.6.1",
+    "xxhash": "3.8.1",
+    "yarl": "1.24.2"
+  }
+}

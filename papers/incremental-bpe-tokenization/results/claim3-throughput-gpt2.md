@@ -7,6 +7,10 @@
 (`b04c8d1c`), 3 709 docs / 16 502 234 bytes — the paper's own Appendix
 H.2 recipe; regenerable via `scripts/fetch_wikipedia_sample.py` and
 verified against the committed provenance sidecar's SHA256.
+**Corroborated** on dedicated HF Jobs compute (64-core, isolated) —
+identical correctness/token counts, eager-overhead ratio unchanged
+(36.0× vs. this run's 34×), see
+[`corroboration-hfjobs.md`](corroboration-hfjobs.md).
 
 ## Scope, stated up front
 
