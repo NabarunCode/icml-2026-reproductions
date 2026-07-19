@@ -68,7 +68,11 @@ select = [
 # and excluded defensively in case it ever vendors Python helpers.
 # ---------------------------------------------------------------------------
 [tool.mypy]
-python_version = "3.11"
+# 3.12, not the 3.11 floor: numpy's bundled stubs (pulled in transitively
+# via the optional `datasets` dependency) use PEP 695 syntax mypy can only
+# parse when targeting 3.12+. The 3.11 runtime floor is still enforced by
+# the py3.11 entry in the CI test matrix (a real interpreter, not mypy).
+python_version = "3.12"
 strict = true
 warn_unreachable = true
 exclude = ["papers/.*/references/.*"]
@@ -76,3 +80,7 @@ exclude = ["papers/.*/references/.*"]
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = "datasets.*"
+ignore_missing_imports = true
