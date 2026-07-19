@@ -112,8 +112,11 @@ def _gpu_info() -> dict[str, Any]:
 
 def _installed_packages() -> dict[str, str]:
     packages: dict[str, str] = {}
+    # distributions() yields in sys.path order; when the same package
+    # appears twice (e.g. a `uv run --with pkg==old` overlay shadowing the
+    # project venv), the FIRST occurrence is the importable one - keep it.
     for dist in importlib.metadata.distributions():
-        packages[dist.name] = dist.version
+        packages.setdefault(dist.name, dist.version)
     return dict(sorted(packages.items(), key=lambda kv: kv[0].lower()))
 
 

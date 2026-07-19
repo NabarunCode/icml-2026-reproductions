@@ -75,12 +75,29 @@ Headline measurements (details and caveats in the results doc):
 - correctness cross-checked against the oracle at every size before
   timing.
 
-**Honest gap:** the paper's actual baseline, `tiktoken`, could not run
-in this sandbox (its encoding files download from a CDN blocked by the
-egress policy). The quadratic baseline measured here isolates the same
-mechanism (from-scratch re-merging per appended byte), but a direct
-tiktoken measurement in an unrestricted environment is still needed
-before this claim can be called fully reproduced.
+**Run 2 (Phase 5, 2026-07-18) — real vocabulary, real tiktoken:**
+[`../../results/claim4-real-vocab.md`](../../results/claim4-real-vocab.md).
+The tiktoken egress blocker was resolved by owner-uploaded, hash-pinned
+vocabulary files (`../../benchmarks/data/`); tiktoken's GPT-2 encoding
+is constructed fully offline from them, and our implementation is
+asserted token-for-token identical to tiktoken before any timing.
+Headlines, all protocol-grade on clean trees:
+
+- ours on the real GPT-2/R50K vocabulary: flat ~19.7 µs/byte,
+  slope **0.987** (linear);
+- tiktoken **0.8.0** (era-appropriate baseline): slope **2.084**
+  (quadratic — the paper's reported O(n²) behavior, reproduced), with a
+  measured crossover: our pure-Python implementation overtakes it
+  beyond ~60-100 kB of pathological input despite the Rust-vs-Python
+  handicap;
+- tiktoken **0.13.0** (current): slope **1.159** up to 8 MB — the
+  quadratic blow-up has been optimized away upstream since the paper's
+  measurements. Reported as environment drift, not hidden: against
+  today's baseline the dramatic contrast narrows to "flat vs. mildly
+  superlinear."
+
+Remaining for full coverage: the paper's larger tokenizers
+(CL100K/O200K) need their `.tiktoken` files uploaded or network access.
 
 ## Result
 

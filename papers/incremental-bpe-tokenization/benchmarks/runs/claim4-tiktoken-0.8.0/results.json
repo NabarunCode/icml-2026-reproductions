@@ -1,0 +1,136 @@
+{
+  "protocol_version": 1,
+  "description": "Era-appropriate Claim 4 baseline: tiktoken 0.8.0 (2024) on 'a'*n with the GPT-2/R50K vocabulary, expected to show the O(n^2) merge-phase decay the paper reports - in contrast to tiktoken 0.13.0 (see the claim4-real-vocab run), where upstream optimization removed it.",
+  "command": "uv run --with tiktoken==0.8.0 python papers/incremental-bpe-tokenization/benchmarks/claim4_tiktoken_regression.py",
+  "seed": null,
+  "tiktoken_version": "0.8.0",
+  "data_files": {
+    "vocab.json": "sha256 196139668be63f3b5d6574427317ae82f612a97c5d1cdaf36ed2256dbf636783",
+    "merges.txt": "sha256 1ce1664773c50f3e0cc8842619a93edc4624525b728b188a9e0be33b7726adc5"
+  },
+  "sizes": [
+    10000,
+    20000,
+    50000,
+    100000,
+    200000
+  ],
+  "environment_file": "environment.json",
+  "benchmarks": [
+    {
+      "name": "tiktoken_0.8.0/n=10000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 41558826.3,
+      "stdev_ns": 1055076.8720076014,
+      "median_ns": 41139291.5,
+      "min_ns": 40398793.0,
+      "max_ns": 43543568.0,
+      "samples_ns": [
+        43543568.0,
+        40677937.0,
+        42467207.0,
+        42668976.0,
+        40975210.0,
+        40665708.0,
+        40398793.0,
+        42022642.0,
+        41303373.0,
+        40864849.0
+      ]
+    },
+    {
+      "name": "tiktoken_0.8.0/n=20000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 165875015.1,
+      "stdev_ns": 1367394.4318548527,
+      "median_ns": 165671328.5,
+      "min_ns": 163986249.0,
+      "max_ns": 168324004.0,
+      "samples_ns": [
+        167684684.0,
+        166329991.0,
+        166140440.0,
+        166424263.0,
+        165202217.0,
+        168324004.0,
+        164930308.0,
+        164962622.0,
+        163986249.0,
+        164765373.0
+      ]
+    },
+    {
+      "name": "tiktoken_0.8.0/n=50000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 1054098089.1,
+      "stdev_ns": 7987785.396724808,
+      "median_ns": 1057223797.0,
+      "min_ns": 1038799291.0,
+      "max_ns": 1061740604.0,
+      "samples_ns": [
+        1061740604.0,
+        1042609064.0,
+        1038799291.0,
+        1051295515.0,
+        1060074932.0,
+        1059294268.0,
+        1051510931.0,
+        1056125622.0,
+        1061208692.0,
+        1058321972.0
+      ]
+    },
+    {
+      "name": "tiktoken_0.8.0/n=100000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 4348190177.8,
+      "stdev_ns": 47698877.60984733,
+      "median_ns": 4335292310.0,
+      "min_ns": 4287406928.0,
+      "max_ns": 4440646238.0,
+      "samples_ns": [
+        4396944525.0,
+        4389880678.0,
+        4340239528.0,
+        4348030987.0,
+        4329961363.0,
+        4322788119.0,
+        4295658320.0,
+        4330345092.0,
+        4287406928.0,
+        4440646238.0
+      ]
+    },
+    {
+      "name": "tiktoken_0.8.0/n=200000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 22276674239.9,
+      "stdev_ns": 723591809.1195962,
+      "median_ns": 22304428316.5,
+      "min_ns": 20976119252.0,
+      "max_ns": 23358537893.0,
+      "samples_ns": [
+        21552863553.0,
+        20976119252.0,
+        21676229568.0,
+        22332230573.0,
+        22736043189.0,
+        22159968667.0,
+        22645375320.0,
+        23358537893.0,
+        22276626060.0,
+        23052748324.0
+      ]
+    }
+  ]
+}
