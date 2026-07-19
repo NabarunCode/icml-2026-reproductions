@@ -52,11 +52,28 @@ available, so should be replicable rather than proxied).
 
 ## Benchmark
 
-Must follow the repo-wide benchmarking standard (root `README.md`):
-warm-up runs, multiple iterations, mean **and** variance reported, full
-environment recorded. Our hardware will not match the paper's 32-core
-bare-metal Xeon node — report our own numbers honestly rather than
-rescaling to compare directly.
+Must follow `docs/BENCHMARK_PROTOCOL.md`: warm-up runs, multiple
+iterations, mean **and** variance reported, full environment recorded.
+Our hardware will not match the paper's 32-core bare-metal Xeon node —
+report our own numbers honestly rather than rescaling to compare
+directly.
+
+**First run (Phase 5, 2026-07-19):**
+[`../../results/claim3-throughput-gpt2.md`](../../results/claim3-throughput-gpt2.md)
+— on the paper's own English dataset recipe (Wikipedia 20231101,
+stride-42, revision-pinned) with GPT-2/R50K:
+
+- **corpus-scale correctness against the claim's actual baseline**: our
+  incremental output is token-for-token identical to HF `tokenizers`
+  over the full 500 kB slice (114 399 tokens, asserted before timing);
+- whole-string BPE vs regex-pre-tokenized tiktoken divergence
+  *measured*: 0.86% fewer tokens;
+- the speedup's sign is **untestable in Python** (~52× Rust-vs-Python
+  constant; pre-declared scope limit) — `hf_bpe_word` at 536 ns/byte is
+  the recorded target line for a future Rust-port comparison;
+- eager overhead: our definition-first implementation costs 34× vs the
+  paper's ~10% two-pointer mechanism — quantifying our documented gap,
+  and serving as the acceptance test for implementing §6.2.
 
 ## Result
 
