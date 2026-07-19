@@ -1,0 +1,4 @@
+# Dataset samples are regenerable (scripts/fetch_wikipedia_sample.py,
+# revision-pinned) and too large to commit; the committed
+# *.provenance.json sidecars carry the SHA256 to verify against.
+*.jsonl

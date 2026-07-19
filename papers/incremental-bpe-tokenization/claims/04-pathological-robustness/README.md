@@ -96,8 +96,14 @@ Headlines, all protocol-grade on clean trees:
   today's baseline the dramatic contrast narrows to "flat vs. mildly
   superlinear."
 
-Remaining for full coverage: the paper's larger tokenizers
-(CL100K/O200K) need their `.tiktoken` files uploaded or network access.
+**Run 3 (Phase 5, 2026-07-19) — the claim's exact named tokenizer:**
+after the environment's network allowlist was opened, `cl100k_base`
+was fetched from OpenAI's CDN (SHA256 matches tiktoken's own pinned
+checksum) and the same two-era measurement ran on **CL100K** — the
+tokenizer the claim statement names: tiktoken 0.8.0 slope **2.041**
+(quadratic), tiktoken 0.13.0 slope **1.141** (mild) up to 8 MB. The
+finding is vocabulary-robust. Remaining: O200K (encoding documented,
+not yet measured).
 
 ## Result
 

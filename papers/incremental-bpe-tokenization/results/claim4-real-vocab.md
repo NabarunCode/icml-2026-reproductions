@@ -27,6 +27,8 @@ external correctness check against a production tokenizer.
 | ours (incremental, Python, GPT-2 vocab) | ~19.7 µs/byte, flat n=5k → 100k | **0.987** | linear |
 | tiktoken **0.13.0** (current) | 139 → 412 ns/byte, n=10k → 8M | **1.159** | mildly superlinear (~n log n-like) |
 | tiktoken **0.8.0** (2024-era) | 4.1 → 111.5 µs/byte, n=10k → 200k (roughly ×2 per size doubling) | **2.084** | **quadratic — the paper's reported behavior** |
+| tiktoken **0.8.0**, **CL100K** (the claim's exact named tokenizer) | 5.0 → 114.0 µs/byte, n=10k → 200k | **2.041** | **quadratic** |
+| tiktoken **0.13.0**, **CL100K** | 195 → 525 ns/byte, n=10k → 8M | **1.141** | mildly superlinear |
 
 (Full per-size tables with dispersion: regenerate via
 `uv run python papers/incremental-bpe-tokenization/scripts/analyze_run.py <run>/results.json`.
@@ -73,9 +75,11 @@ repository exists to record.
 - Absolute Python-vs-Rust numbers carry no speedup information
   (protocol §7): ours is ~19.7 µs/byte in pure Python; the contrast
   under test is *shape*, not magnitude.
-- One vocabulary (R50K) and one pathological family (`'a'*n`); the
-  paper's Figure 3 also uses larger tokenizers (CL100K/O200K), whose
-  files we don't yet have locally.
+- One pathological family (`'a'*n`). Vocabulary coverage now includes
+  both R50K and CL100K — the claim's exact named tokenizer — with the
+  same version story on both (runs `claim4-cl100k-tiktoken-*`,
+  encoding file hash-verified at load). O200K's encoding file is
+  documented-not-committed (large-file cap) and not yet measured.
 - tiktoken 0.5.2 could not be probed (its module lacks
   `__version__`; probe script failed before measuring — not evidence
   about its behavior either way).

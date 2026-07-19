@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "captured_at_utc": "2026-07-19T03:01:56.094448+00:00",
+  "git": {
+    "commit": "9ae3bf53afb2dd9ac17ec7e065f9183bda7e7152",
+    "branch": "claude/icml-2026-reproductions-handover-zvye6y",
+    "dirty": false
+  },
+  "python": {
+    "version": "3.11.15",
+    "implementation": "CPython",
+    "executable": "/root/.cache/uv/builds-v0/.tmp4kPYPu/bin/python"
+  },
+  "os": {
+    "system": "Linux",
+    "release": "6.18.5",
+    "version": "#1 SMP PREEMPT_DYNAMIC @0",
+    "machine": "x86_64"
+  },
+  "cpu": {
+    "model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "logical_cores": 4
+  },
+  "memory": {
+    "total_bytes": 16856244224
+  },
+  "gpu": {
+    "devices": null,
+    "cuda_version": null
+  },
+  "rust": {
+    "rustc_version": "rustc 1.94.1 (e408947bf 2026-03-25)"
+  },
+  "packages": {
+    "anyio": "4.14.2",
+    "ast_serialize": "0.6.0",
+    "certifi": "2026.6.17",
+    "cfgv": "3.5.0",
+    "charset-normalizer": "3.4.9",
+    "click": "8.4.2",
+    "distlib": "0.4.3",
+    "filelock": "3.31.0",
+    "fsspec": "2026.6.0",
+    "h11": "0.16.0",
+    "hf-xet": "1.5.2",
+    "httpcore": "1.0.9",
+    "httpx": "0.28.1",
+    "huggingface_hub": "1.24.0",
+    "identify": "2.6.19",
+    "idna": "3.18",
+    "incbpe": "0.1.0",
+    "iniconfig": "2.3.0",
+    "librt": "0.13.0",
+    "mypy": "2.3.0",
+    "mypy_extensions": "1.1.0",
+    "nodeenv": "1.10.0",
+    "packaging": "26.2",
+    "pathspec": "1.1.1",
+    "platformdirs": "4.10.1",
+    "pluggy": "1.6.0",
+    "pre_commit": "4.6.0",
+    "Pygments": "2.20.0",
+    "pytest": "9.1.1",
+    "python-discovery": "1.4.4",
+    "PyYAML": "6.0.3",
+    "regex": "2026.7.10",
+    "repro-core": "0.1.0",
+    "requests": "2.34.2",
+    "ruff": "0.15.22",
+    "tiktoken": "0.8.0",
+    "tokenizers": "0.23.1",
+    "tqdm": "4.69.0",
+    "typing_extensions": "4.16.0",
+    "urllib3": "2.7.0",
+    "virtualenv": "21.6.1"
+  }
+}

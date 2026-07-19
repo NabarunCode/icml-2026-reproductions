@@ -59,8 +59,13 @@ SAMPLE = BENCH_DIR / "data" / "datasets" / "wikipedia_en_20231101_stride42.jsonl
 
 # Our Python implementation runs ~20-30 us/byte, so the timed slice is
 # 500 kB (protocol-compliant repeats stay under ~5 minutes total);
-# correctness is checked over the same slice.
+# correctness is checked over the same slice. The definition-first eager
+# implementation calibrated at ~1.7 ms/byte (~80x non-eager) on this
+# vocabulary, so its series uses a 10 kB sub-slice - the ratio is
+# per-byte-normalized and the huge overhead is itself the documented
+# implementation-gap measurement (paper's own mechanism: ~10%).
 SLICE_BYTES = 500_000
+EAGER_SLICE_BYTES = 10_000
 
 GPT2_PAT = r"""'s|'t|'re|'ve|'m|'ll|'d| ?[\p{L}]+| ?[\p{N}]+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 
@@ -144,9 +149,11 @@ def main() -> None:
         r.feed_all(data)
         r.tokens()
 
+    eager_data = data[:EAGER_SLICE_BYTES]
+
     def ours_eager() -> None:
         er = new_eager_run(ours.new_run())
-        for byte in data:
+        for byte in eager_data:
             er.feed(byte)
         er.finish()
 
@@ -156,16 +163,16 @@ def main() -> None:
     def tiktoken_r50k() -> None:
         enc.encode(text, disallowed_special=())
 
-    for name, fn in [
-        ("ours_feed", ours_feed),
-        ("ours_eager", ours_eager),
-        ("hf_bpe_word", hf_bpe_word),
-        ("tiktoken_r50k", tiktoken_r50k),
+    for name, fn, nbytes in [
+        ("ours_feed", ours_feed, len(data)),
+        ("ours_eager", ours_eager, len(eager_data)),
+        ("hf_bpe_word", hf_bpe_word, len(data)),
+        ("tiktoken_r50k", tiktoken_r50k, len(data)),
     ]:
         r: BenchmarkResult = run_benchmark(
-            fn, name=f"{name}/slice={len(data)}", warmup=WARMUP, repeats=REPEATS
+            fn, name=f"{name}/slice={nbytes}", warmup=WARMUP, repeats=REPEATS
         )
-        print(f"{r.name}: median {r.median_ns / len(data):.0f} ns/byte", flush=True)
+        print(f"{r.name}: median {r.median_ns / nbytes:.0f} ns/byte", flush=True)
         results.append(r.to_dict())
 
     payload = {

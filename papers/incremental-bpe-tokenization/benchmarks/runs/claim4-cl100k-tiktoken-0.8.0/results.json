@@ -1,0 +1,135 @@
+{
+  "protocol_version": 1,
+  "description": "Claim 4's exact named setting: tiktoken with CL100K on 'a'*n. Grid sized by installed tiktoken version (quadratic-era 0.8.x kept small; current versions measured to 8 MB).",
+  "command": "uv run [--with tiktoken==0.8.0] python papers/incremental-bpe-tokenization/benchmarks/claim4_tiktoken_cl100k.py",
+  "seed": null,
+  "tiktoken_version": "0.8.0",
+  "data_files": {
+    "cl100k_base.tiktoken": "sha256 223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7 (verified at load)"
+  },
+  "sizes": [
+    10000,
+    20000,
+    50000,
+    100000,
+    200000
+  ],
+  "environment_file": "environment.json",
+  "benchmarks": [
+    {
+      "name": "tiktoken_cl100k_0.8.0/n=10000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 52619543.6,
+      "stdev_ns": 6907133.461485037,
+      "median_ns": 49866425.5,
+      "min_ns": 48950107.0,
+      "max_ns": 71575062.0,
+      "samples_ns": [
+        50558570.0,
+        49326555.0,
+        71575062.0,
+        52362897.0,
+        54912595.0,
+        50081596.0,
+        49549882.0,
+        49226917.0,
+        48950107.0,
+        49651255.0
+      ]
+    },
+    {
+      "name": "tiktoken_cl100k_0.8.0/n=20000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 199057017.8,
+      "stdev_ns": 1275389.1857870766,
+      "median_ns": 199078580.0,
+      "min_ns": 197253232.0,
+      "max_ns": 200961139.0,
+      "samples_ns": [
+        199048644.0,
+        199879530.0,
+        197253232.0,
+        198319156.0,
+        198074094.0,
+        200036459.0,
+        197430459.0,
+        199108516.0,
+        200961139.0,
+        200458949.0
+      ]
+    },
+    {
+      "name": "tiktoken_cl100k_0.8.0/n=50000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 1281973881.8,
+      "stdev_ns": 18537656.854968924,
+      "median_ns": 1278457481.0,
+      "min_ns": 1264634910.0,
+      "max_ns": 1319540300.0,
+      "samples_ns": [
+        1280239769.0,
+        1265201410.0,
+        1264711099.0,
+        1293588838.0,
+        1280986365.0,
+        1264634910.0,
+        1319540300.0,
+        1276675193.0,
+        1304146328.0,
+        1270014606.0
+      ]
+    },
+    {
+      "name": "tiktoken_cl100k_0.8.0/n=100000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 5264537618.7,
+      "stdev_ns": 104097761.58349748,
+      "median_ns": 5225765204.0,
+      "min_ns": 5154073236.0,
+      "max_ns": 5462429597.0,
+      "samples_ns": [
+        5228802528.0,
+        5262832997.0,
+        5210026626.0,
+        5175527581.0,
+        5183677031.0,
+        5462429597.0,
+        5406777921.0,
+        5338500790.0,
+        5222727880.0,
+        5154073236.0
+      ]
+    },
+    {
+      "name": "tiktoken_cl100k_0.8.0/n=200000",
+      "warmup": 3,
+      "repeats": 10,
+      "inner_iterations": 1,
+      "mean_ns": 22800823747.5,
+      "stdev_ns": 368289361.7925837,
+      "median_ns": 22806151221.5,
+      "min_ns": 22351633824.0,
+      "max_ns": 23582205804.0,
+      "samples_ns": [
+        23096786945.0,
+        22994144744.0,
+        23582205804.0,
+        22597578761.0,
+        22822785059.0,
+        22453851818.0,
+        22351633824.0,
+        22458135648.0,
+        22789517384.0,
+        22861597488.0
+      ]
+    }
+  ]
+}
