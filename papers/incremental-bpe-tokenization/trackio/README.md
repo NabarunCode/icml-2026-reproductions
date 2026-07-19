@@ -6,11 +6,39 @@ Reproductions there are published as **Trackio logbooks** — Hub-native,
 per-claim experiment records, judged per claim
 (`verified` / `falsified` / `toy` / `inconclusive`).
 
-**This document is preparation only.** Nothing here has been executed.
-Per this project's rules, we do not scaffold a logbook with claim pages
-until there is real Phase 1–6 work behind each page — an empty logbook
-with placeholder claims is not evidence, and publishing one would violate
-the project's "never claim reproduction without evidence" rule.
+**Status: EXECUTED 2026-07-19** — after Phases 1–6 produced real
+evidence for every claim page. Published:
+
+- Space: <https://huggingface.co/spaces/hinabarun/repro-incremental-bpe-tokenization>
+- Rendered: <https://hinabarun-repro-incremental-bpe-tokenization.static.hf.space/>
+- Artifact bucket (reproduction bundle):
+  `hinabarun/repro-incremental-bpe-tokenization-artifacts`
+
+Execution record (deviations from the recipe below, all documented):
+
+1. Both official scripts were fetched and **reviewed before running**
+   (as this document required). The installed trackio lacked the native
+   `scaffold_icml_logbook` API, so the script's fallback path ran; it
+   set the required metadata tags (`icml2026-repro`,
+   `paper-ZbWgrDzCQo`) correctly.
+2. **Claim page titles were shortened** — the scaffold slugifies the
+   full claim text into a directory name, and the verbatim Claim 1 text
+   exceeds the filesystem's 255-byte filename limit. The verbatim claim
+   statements appear in full inside each page body; the validator only
+   requires `claim-N` slug prefixes, which hold.
+3. `trackio.init()` (needed for `log_artifact`) auto-appended a stray
+   run-dashboard page to the logbook; it was removed from `pages/`,
+   `index.md`, and `logbook.json` before validation.
+4. `poster_embed.html` was authored directly (self-contained HTML
+   verdict poster for *our reproduction* — not the authors' poster)
+   rather than generated with posterly.
+5. Post-publish checks passed: validator green; artifact cell's link
+   rewritten at publish from `trackio-artifact://` to the real bucket
+   URL (verified on the published page); `poster_embed.html` present in
+   the Space (HTTP 200); pinned Executive-summary cell and Conclusion
+   bundle-description cell in place. The rendered `*.hf.space` domain
+   is not reachable from this sandbox's allowlist — rendering should be
+   eyeballed once from a browser.
 
 ## Environment status (checked 2026-07-18)
 
