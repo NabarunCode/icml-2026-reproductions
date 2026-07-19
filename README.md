@@ -1,9 +1,18 @@
+<div align="center">
+
 # ICML 2026 Reproductions
+
+**Honest, scientific reproductions of accepted ML papers — no fabricated numbers, no hidden failures.**
 
 [![CI](https://github.com/NabarunCode/icml-2026-reproductions/actions/workflows/ci.yml/badge.svg)](https://github.com/NabarunCode/icml-2026-reproductions/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](pyproject.toml)
 [![Typed](https://img.shields.io/badge/mypy-strict-blue)](pyproject.toml)
+[![Reproductions](https://img.shields.io/badge/reproductions-1-blueviolet)](#reproductions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+</div>
+
+---
 
 A research repository for honest, scientific reproductions of accepted
 ICML (and eventually NeurIPS / ICLR) papers. This is not a hackathon
@@ -15,20 +24,22 @@ it rigorously, and report honestly what did and did not hold up.
 > If a result doesn't reproduce, that's a valid, documented outcome —
 > not a failure of this repository.
 
-**Contents:** [Principles](#principles) ·
-[Quick start](#quick-start) ·
-[Reproductions](#reproductions) ·
-[Process](#process) ·
-[Repository layout](#repository-layout) ·
-[Benchmarking standard](#benchmarking-standard) ·
-[Coding style](#coding-style) ·
-[License](#license)
+## Contents
+
+- [Principles](#principles)
+- [Quick start](#quick-start)
+- [Reproductions](#reproductions)
+- [Process](#process)
+- [Repository layout](#repository-layout)
+- [Benchmarking standard](#benchmarking-standard)
+- [Coding style](#coding-style)
+- [License](#license)
 
 ---
 
 ## Principles
 
-| | |
+| Principle | What it means here |
 |---|---|
 | **Correctness over speed** | No claim is reported without evidence. |
 | **No fabrication** | Numbers are measured, never invented or extrapolated without saying so. |
@@ -59,7 +70,7 @@ organized and why.
 ## Reproductions
 
 | Paper | Venue | Status | Verdict | Logbook |
-|---|---|---|---|---|
+|---|---|:---:|---|:---:|
 | [Incremental BPE Tokenization](papers/incremental-bpe-tokenization/) (Jiang & Gong) | ICML 2026 | ![8/8 phases](https://img.shields.io/badge/phases-8%2F8-brightgreen) | 2 reproduced · 1 partially reproduced · 1 correctness-verified (speedup untestable in Python) — nothing falsified | [Space](https://huggingface.co/spaces/hinabarun/repro-incremental-bpe-tokenization) |
 
 Each row links to a fully self-contained paper folder with its own
