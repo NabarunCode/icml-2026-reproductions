@@ -30,3 +30,16 @@ deliberately; to reproduce, download it to
 Not yet used by any benchmark: CodeLlama is SentencePiece-semantics and
 needs the Appendix A properization work first (see experiments README,
 Limitations).
+
+## `tiktoken/` (encoding files, downloaded 2026-07-19 after network-policy change)
+
+Fetched directly from OpenAI's CDN once the environment's network
+allowlist was updated (no upload needed):
+
+| File | SHA256 | Committed? | Source |
+|---|---|---|---|
+| `cl100k_base.tiktoken` (1.68 MB) | `223921b76ee99bde995b7ff738513eef100fb51d18c93597a113bcffe865b2a7` | yes | `https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken` |
+| `o200k_base.tiktoken` (3.6 MB) | `446a9538cb6c348e3516120d7c08b09f57c36495e2acfffe59a5bf8b0cfb1a2d` | no (exceeds 2 MB large-file cap; re-download + verify) | `https://openaipublic.blob.core.windows.net/encodings/o200k_base.tiktoken` |
+
+These SHA256 values match the checksums tiktoken itself pins for these
+encodings, cross-confirming integrity.
