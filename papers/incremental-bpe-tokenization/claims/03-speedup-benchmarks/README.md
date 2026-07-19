@@ -1,6 +1,10 @@
-# Claim 3 — Drop-in Speedup vs. Hugging Face `tokenizers`
+# Claim 3 — Drop-in Speedup over Hugging Face `tokenizers`
 
-**Status:** ☐ not started (Phase 0 scaffold only)
+**Status:** ☑ Phase 6 verdict recorded — **Drop-in equivalence
+reproduced; speedup untested by design.** Correctness against the
+claim's baseline library is verified token-for-token at corpus scale;
+the 3.13× speedup itself cannot be tested from Python (pre-declared
+scope limit), so it is neither confirmed nor contradicted.
 
 ## Claim statement
 
@@ -77,19 +81,53 @@ stride-42, revision-pinned) with GPT-2/R50K:
 
 ## Result
 
-*(Phase 6 — to be written. No fabricated numbers.)*
+([`../../results/claim3-throughput-gpt2.md`](../../results/claim3-throughput-gpt2.md),
+run on the paper's own Appendix H.2 English recipe, revision-pinned.)
+
+- **The "drop-in" half is reproduced**: our incremental implementation
+  produced token-for-token identical output to Hugging Face
+  `tokenizers` — the exact baseline library the claim is measured
+  against — across the full 500 kB corpus slice (114 399 tokens, zero
+  divergences), and to `tiktoken` on 100 kB of pathological input.
+- **The "speedup" half is untested**: our Python implementation is
+  ~52× slower than the Rust baseline on the identical problem
+  (28.0 µs/byte vs 536 ns/byte), exactly the constant-factor wall the
+  Python-first decision predicted. No speedup claim can be evaluated
+  through that wall in either direction.
+- The paper's headline 3.13× is specifically CodeLlama, whose
+  SentencePiece-semantics vocabulary additionally requires Appendix A
+  properization that our reproduction does not implement.
+- Bonus datum: whole-string BPE (the "no pre-tokenization" regime where
+  the paper's biggest gains live) yields 0.86% fewer tokens than
+  regex-pre-tokenized tiktoken on the same bytes — measured, relevant
+  context for why that regime behaves differently.
 
 ## Discussion
 
-*(Phase 6 — to be written.)*
+A speedup claim about a Rust implementation cannot be honestly tested
+by a Python reimplementation; we said so before running anything and
+the measured 52× constant confirms it. What a reproduction *can*
+establish from here is (a) the semantic equivalence that makes
+"drop-in" true — done — and (b) the asymptotic mechanism the speedup
+rests on — established under Claim 4, where shape (not constant)
+is the question. The recorded 536 ns/byte HF baseline number is the
+target line if the pre-approved Rust-port fallback is ever exercised.
 
 ## Limitations
 
-*(Phase 6 — to be written.)*
+- One vocabulary (GPT-2/R50K); the claim's headline tokenizer
+  (CodeLlama) is untested pending properization.
+- One dataset (English); the paper's Chinese and Code datasets are
+  untouched.
+- Single shared-VM environment; no isolated re-run yet.
 
 ## Conclusion
 
-*(Phase 6 — to be written.)*
+**Drop-in equivalence reproduced; speedup untested by design.** The
+correctness prerequisite of the claim holds perfectly at corpus scale.
+The performance comparison requires a compiled implementation of the
+paper's algorithm and remains open — honestly out of scope for a
+Python reproduction, not evidence against the paper.
 
 ---
 

@@ -1,8 +1,8 @@
 # Claim 1 — The Monotonic Path Property (Theorem 4.2)
 
-**Status:** ◐ in progress — theory understood (Phase 2) and implemented
-+ empirically tested (Phase 4); formal Appendix E re-derivation and final
-written-up verdict still open (Phase 6).
+**Status:** ☑ Phase 6 verdict recorded — **Reproduced (empirically),
+at the structural level.** The formal Appendix E re-derivation remains
+an explicitly open strengthening step (see Limitations).
 
 ## Claim statement
 
@@ -56,10 +56,10 @@ work (below) surfaces a case the intuition doesn't cleanly cover.
 
 Implemented in
 [`../../experiments/incbpe/incremental.py`](../../experiments/incbpe/incremental.py),
-which codes Definition 4.1 (Prefix Last-Token Condition) directly via a
-Successor Forest ancestor-walk, rather than the paper's O(1) DFS-interval
-shortcut (that speedup is deferred — see the experiment's `README.md`
-"Limitations"). Verification is exactly the "exhaustive/randomized
+which codes Definition 4.1 (Prefix Last-Token Condition) both directly
+(Successor Forest ancestor-walk, kept as an oracle) and via the paper's
+own O(1) DFS-interval test (`dfs_interval.py`, §4.3), the two checked
+against each other exhaustively. Verification is exactly the "exhaustive/randomized
 testing against a brute-force reference BPE" approach this section
 originally called for: every test in `tests/test_incremental.py` runs
 with `verify_monotonic=True`, which — on every single byte fed, not just
@@ -86,19 +86,64 @@ claim. No timing benchmark belongs here (see Claims 3–4 for performance).
 
 ## Result
 
-*(Phase 6 — to be written. No fabricated numbers.)*
+Every empirically testable consequence of Theorem 4.2 held with **zero
+violations** across every test family in the repository:
+
+- **Upward Closure** (Appendix E Claim 1), checked on *every byte fed*
+  (`verify_monotonic=True`): reference-implementation traces, 200
+  randomized dictionaries, and the repeated-character pathological
+  family — every forest-ancestor of every computed θ(s) satisfied
+  Definition 4.1.
+- **Uniqueness of the satisfying child** (the theorem's single-path
+  half): the "Mutual Exclusion among Siblings" corollary verified
+  directly across 200 randomized dictionaries plus the
+  Figure-2-variant (`test_sibling_disjointness.py`) — at most one
+  child interval ever contains a given query.
+- **Equivalence of the O(1) interval test with the definition**: the
+  DFS-interval test agrees with the ancestor-walk oracle on the *full
+  cross product* of (candidate token × possible history value), not
+  just values arising in sampled runs (`test_dfs_interval.py`).
+- **Consequence-level check at real scale**: the search built on this
+  theorem produced token-for-token identical output to Hugging Face
+  `tokenizers` on 500 kB of real Wikipedia text and to `tiktoken` on
+  100 kB pathological input, on the real 50 258-token GPT-2 vocabulary.
+  Any single-byte failure of the path property anywhere in those runs
+  would have produced a divergent token sequence; none occurred.
 
 ## Discussion
 
-*(Phase 6 — to be written.)*
+The theorem is a structural claim, so the right evidence is exhaustive
+and adversarial testing of its logical consequences, which is what the
+layered test suite does — including one designed-in stress: the primary
+search (`_search_binary_walk`) deliberately relies on Appendix E's
+Claim 4 holding for *every* forest child (skipping the buffer-suffix
+pre-filter the fallback searches use), so hundreds of dictionaries of
+per-byte cross-checking directly exercised the theorem's least
+intuitive part. Note the complexity *corollary* (O(log²t)/byte) is a
+separate matter: our implementation demonstrates the per-level
+mechanism but not the centroid-bounded level count (see Claim 2).
 
 ## Limitations
 
-*(Phase 6 — to be written.)*
+- Empirical verification is not proof. The paper's own four-claim proof
+  (Appendix E) has **not** been independently re-derived line-by-line;
+  this is the one open strengthening step, and it is a reading/writing
+  task, not an experimental one.
+- Exhaustive coverage applies to the small randomized dictionary space;
+  the 50k real vocabulary is covered end-to-end (consequence-level) but
+  not exhaustively per-property.
+- Byte-level atomicity only; SentencePiece-semantics dictionaries
+  (Appendix A) are out of scope of this verdict.
 
 ## Conclusion
 
-*(Phase 6 — to be written.)*
+**Reproduced (empirically).** Every testable consequence of the
+Monotonic Path Property held without exception across exhaustive small-
+scale spaces, adversarial constructions, and a real 50k-token
+vocabulary at corpus scale. We found no case in which the valid
+candidates failed to form a single monotonic path. Formal re-derivation
+of Appendix E remains open and would upgrade this verdict from
+"empirically reproduced" to "independently verified".
 
 ---
 

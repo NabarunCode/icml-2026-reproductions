@@ -1,14 +1,11 @@
 # Claim 2 — Algorithm Design (Aho–Corasick + Centroid Decomposition + Eager Output)
 
-**Status:** ◐ in progress — Aho–Corasick, the O(1) DFS-interval test
-(with its "Mutual Exclusion among Siblings" precondition independently
-verified), and eager output all exist and are tested. The single
-remaining gap is now narrow and precise: Centroid Decomposition, which
-bounds the *number of tree levels* visited to O(log t) — everything else
-(the O(1) per-level test, the O(log branching) binary search over
-siblings) already matches the paper's mechanism. Eager output is also
-not yet its specific O(1)-amortized two-pointer mechanism. This claim
-cannot be marked verified until Centroid Decomposition closes that gap.
+**Status:** ☑ Phase 6 verdict recorded — **Partially reproduced.**
+The composition (automaton + tree search + eager output) is
+demonstrated correct end-to-end at real-vocabulary scale; two of the
+claim's named performance mechanisms (§5.3 Centroid Decomposition,
+§6.2 two-pointer eager) are not implemented, and the cost of each
+absence is *measured*, not estimated (see Result).
 
 ## Claim statement
 
@@ -126,7 +123,7 @@ everything else about the per-level mechanism is done and verified.
   (plus a final flush) exactly reproduces the non-eager tokenization,
   checked across the same three test families.
 
-All of the above pass (22/22 tests). "Same tokenization result, faster"
+All of the above pass (the suite has since grown to 44 tests / 2 126 subtests, all green in CI). "Same tokenization result, faster"
 is now true for the search at the per-level mechanism level — what's not
 yet true is "bounded to O(log t) levels in the worst case," which needs
 Centroid Decomposition specifically.
@@ -153,19 +150,62 @@ is the acceptance test for the follow-up.
 
 ## Result
 
-*(Phase 6 — to be written. No fabricated numbers.)*
+**Reproduced components, all verified:**
+
+- Aho–Corasick automaton: correct vs brute force on toy families;
+  builds and runs at 50k-vocabulary scale; τ(sc) available per byte.
+- Per-level search machinery (the §4.3/§5.3 per-node mechanism): O(1)
+  DFS-interval test + binary search over provably-disjoint sibling
+  intervals, exhaustively cross-checked (see Claim 1's Result).
+- Eager output: byte-stream emission exactly reproduces non-eager
+  tokenization on every test family.
+- The composition works end-to-end on a real 50k vocabulary,
+  token-for-token identical to two production tokenizers.
+
+**Not reproduced, with the gap quantified
+([`../../results/claim2-depth-scaling.md`](../../results/claim2-depth-scaling.md),
+[`../../results/claim3-throughput-gpt2.md`](../../results/claim3-throughput-gpt2.md)):**
+
+- Centroid Decomposition (§5.3): without it, worst single-byte search
+  latency grows **linearly with forest depth** (log-log slope 0.972,
+  ~0.8 µs/level, depths 16→512) while amortized throughput stays flat —
+  i.e. the mechanism's real value on such inputs is tail latency, a
+  sharper statement than the paper makes explicit.
+- Two-pointer eager output (§6.2): our definition-first eager
+  implementation costs **34× non-eager** on real text where the paper
+  reports **~10%** for its mechanism — the gap between the definition
+  and the paper's algorithm, measured.
 
 ## Discussion
 
-*(Phase 6 — to be written.)*
+The claim asserts a *design*: three mechanisms composing correctly.
+Composition-correctness is fully verified. What our reproduction does
+not show is the two performance mechanisms themselves; deliberately so —
+for Centroid Decomposition, reading the reference's remainder-handling
+was not sufficient to reconstruct it with confidence, and shipping a
+plausible-but-unverified version would have been worse than an honest
+gap (see `PROVENANCE.md`). Both measured gaps now double as acceptance
+tests: implementing §5.3 must flatten `feed_max_latency` to polylog;
+implementing §6.2 must collapse the eager ratio from ~34× toward ~1.1×.
 
 ## Limitations
 
-*(Phase 6 — to be written.)*
+- The paper's O(log²t) navigation bound is neither confirmed nor
+  contradicted by us — our implementation doesn't contain the mechanism
+  that produces it.
+- The Appendix F square-root tiled transition table (a memory
+  optimization) is also not reproduced; our automaton is the classic
+  construction.
+- Appendix G's amortized O(1) eager argument was not re-derived.
 
 ## Conclusion
 
-*(Phase 6 — to be written.)*
+**Partially reproduced.** The algorithm's architecture is validated:
+the three components exist, compose, and yield provably correct output
+at real scale. The claim's performance-mechanism content (centroid
+navigation, O(1)-amortized eager) is not reproduced; the cost of each
+absence is measured and recorded, giving precise acceptance criteria
+for closing them.
 
 ---
 

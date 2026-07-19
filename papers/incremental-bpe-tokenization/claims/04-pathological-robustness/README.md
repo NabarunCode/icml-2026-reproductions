@@ -1,6 +1,9 @@
 # Claim 4 — Pathological-Input Robustness vs. `tiktoken`
 
-**Status:** ☐ not started (Phase 0 scaffold only)
+**Status:** ☑ Phase 6 verdict recorded — **Reproduced against the
+era-appropriate baseline, with a documented environment-drift finding**
+(current tiktoken no longer exhibits the quadratic decay; the claim's
+mechanism contrast survives).
 
 ## Claim statement
 
@@ -107,19 +110,60 @@ not yet measured).
 
 ## Result
 
-*(Phase 6 — to be written. No fabricated numbers.)*
+(Three protocol-grade run families; details in
+[`../../results/claim4-pathological.md`](../../results/claim4-pathological.md)
+and [`../../results/claim4-real-vocab.md`](../../results/claim4-real-vocab.md).)
+
+- **Our incremental implementation holds stable throughput** on 'a'*n:
+  log-log slope 0.995 (synthetic dictionary, n to 100k) and 0.987 (real
+  GPT-2 vocabulary) — flat per-byte cost across a 100× size range, with
+  output asserted token-identical to tiktoken before timing.
+- **tiktoken's O(n²) decay reproduces on the era-appropriate version
+  (0.8.0)**: slope 2.084 on R50K and **2.041 on CL100K — the tokenizer
+  the claim statement names**. Per-byte cost doubles with every input
+  doubling, exactly the paper's Figure 3 behavior.
+- **Measured crossover**: our pure-Python implementation overtakes
+  0.8.0-era Rust tiktoken beyond ~60–100 kB of pathological input
+  (5.7× faster at 200 kB) — right asymptotics beating a compiled
+  implementation with wrong asymptotics.
+- **Environment drift**: current tiktoken (0.13.0) no longer shows the
+  blow-up (slopes 1.14–1.16 up to 8 MB, consistent with an upstream
+  algorithmic fix between 0.8.0 and 0.13.0). Against today's baseline
+  the contrast narrows to "flat vs. mildly superlinear."
 
 ## Discussion
 
-*(Phase 6 — to be written.)*
+The claim has two parts and they fared differently. The part about *the
+incremental method* — stable throughput on adversarial input — is
+cleanly reproduced, twice over (synthetic and real vocabulary). The
+part about *the baseline* was true when the paper measured it and is no
+longer true of the current release: baselines are moving targets, and
+this reproduction caught the movement precisely because it version-
+pinned everything. Note the paper's underlying point survives the
+drift: the incremental method's worst-case guarantee is structural,
+while tiktoken's improvement is an implementation optimization that
+had to be discovered and shipped — the DoS-hardening argument in the
+paper's Impact Statement favors guarantees over patches.
 
 ## Limitations
 
-*(Phase 6 — to be written.)*
+- O200K not yet measured (encoding documented, file exceeds the
+  large-file cap). The paper's "Regex Errors" observation at extreme
+  lengths is untested.
+- tiktoken 0.5.2 could not be probed (packaging quirk); the exact
+  version range where upstream fixed the merge loop is not pinned down.
+- Absolute numbers are Python-vs-Rust and carry no magnitude
+  information (protocol §7); the verdict rests entirely on shape.
 
 ## Conclusion
 
-*(Phase 6 — to be written.)*
+**Reproduced — against the baseline as it existed in the paper's era —
+with the added finding that the baseline has since fixed the quadratic
+behavior upstream.** Both halves are evidence-backed: slopes 2.04–2.08
+(old tiktoken, quadratic, including on CL100K specifically) vs. 0.99
+(ours, flat), and slopes 1.14–1.16 for today's tiktoken. A reproduction
+that simply ran today's tiktoken would have wrongly concluded the paper
+overclaimed; version archaeology shows it didn't.
 
 ---
 
